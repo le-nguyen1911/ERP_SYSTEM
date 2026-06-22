@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -26,33 +27,37 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
         return ResponseEntity.ok(
-                ApiResponse.success("Đăng ký thành công",authService.register(request))
+                ApiResponse.success("Đăng ký thành công", authService.register(request))
         );
     }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(@Valid @RequestBody LoginRequest request, HttpServletRequest httpServletRequest) {
 
-            String deviceInfo = extractDeviceInfo(httpServletRequest);
+        String deviceInfo = extractDeviceInfo(httpServletRequest);
         return ResponseEntity.ok(
                 ApiResponse.success("Đăng nhập thành công", authService.login(request, deviceInfo))
         );
     }
+
     @PostMapping("/refresh-token")
-    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestHeader("Refresh-Token") String refreshToken){
+    public ResponseEntity<ApiResponse<AuthResponse>> refreshToken(@RequestHeader("Refresh-Token") String refreshToken) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         authService.refreshToken(refreshToken)
                 )
         );
     }
+
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> getMe(@AuthenticationPrincipal UserDetails user){
+    public ResponseEntity<ApiResponse<UserInfoResponse>> getMe(@AuthenticationPrincipal UserDetails user) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         authService.getMe(user.getUsername())
                 )
         );
     }
+
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse<Object>> logout(
             @RequestHeader("Refresh-Token") String refreshToken) {
@@ -92,7 +97,7 @@ public class AuthController {
 
     @DeleteMapping("/sessions/{id}")
     public ResponseEntity<ApiResponse<Object>> revokeSession(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @AuthenticationPrincipal UserDetails userDetails) {
         // Thu hồi 1 session cụ thể
         // Ví dụ: đăng xuất khỏi máy tính cũ từ xa

@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-
 @Entity
 @Table(name = "products")
 @Getter
@@ -17,14 +16,21 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Product extends BaseEntity {
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 50)
     private String code;
-    @Column(nullable = false, unique = true)
+
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
-    @Column(nullable = false, unique = true)
+
+    @Column(columnDefinition = "TEXT")
     private String description;
-    @Column(precision = 15, scale = 2, nullable = false)
+
+    @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal price;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private Boolean active = true;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id", nullable = false)
@@ -34,16 +40,9 @@ public class Product extends BaseEntity {
     @JoinColumn(name = "unit_id", nullable = false)
     private Unit unit;
 
-    @Builder.Default
-    @Column(nullable = false)
-    private Boolean active = true;
-
-    @OneToMany(
-            mappedBy = "product",
+    @OneToMany(mappedBy = "product",
             fetch = FetchType.LAZY,
-            cascade = {CascadeType.MERGE, CascadeType.PERSIST}
-    )
+            cascade = CascadeType.ALL)
     @Builder.Default
-    private List<ProductStock> productStocks = new ArrayList<>();
-
+    private List<ProductStock> stocks = new ArrayList<>();
 }

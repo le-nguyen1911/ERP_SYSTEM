@@ -6,18 +6,16 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
-
 @Entity
 @Table(name = "stock_transactions")
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class StockTransaction extends BaseEntity {
     public enum TransactionType {
         IMPORT,
-
         EXPORT
     }
 
@@ -30,12 +28,18 @@ public class StockTransaction extends BaseEntity {
     private Warehouse warehouse;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private TransactionType type;
+
     @Column(nullable = false)
-    private TransactionType transactionType;
+    private Integer quantity;
 
     @Column(precision = 15, scale = 2)
     private BigDecimal unitPrice;
 
+    @Column(length = 500)
     private String note;
+
+    @Column(nullable = false, length = 50)
     private String createdBy;
 }

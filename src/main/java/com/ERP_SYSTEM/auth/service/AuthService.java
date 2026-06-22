@@ -7,14 +7,17 @@ import com.ERP_SYSTEM.auth.dto.response.AuthResponse;
 import com.ERP_SYSTEM.auth.dto.response.UserInfoResponse;
 
 import java.util.List;
+import java.util.UUID;
 
 public interface AuthService {
 
     AuthResponse register(RegisterRequest request);
+
     AuthResponse login(LoginRequest request, String deviceInfo);
     // Thêm deviceInfo → biết đăng nhập từ thiết bị nào
 
     AuthResponse refreshToken(String refreshToken);
+
     UserInfoResponse getMe(String username);
 
     void logout(String refreshToken);
@@ -27,6 +30,6 @@ public interface AuthService {
             String username, String currentToken);
     // Xem danh sách thiết bị đang đăng nhập
 
-    void revokeSession(Long tokenId, String username);
+    void revokeSession(UUID tokenId, String username);
     // Admin hoặc chính user thu hồi 1 session cụ thể
 }

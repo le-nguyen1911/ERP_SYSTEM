@@ -19,6 +19,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @Controller
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -42,7 +44,7 @@ public class UserController {
 
     @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('USER_VIEW')")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserInfoResponse>> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         userService.getUserById(id)
@@ -52,7 +54,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('USER_UPDATE')")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> updateUserById(@PathVariable Long id, @Valid @RequestBody UpdateUserRequest request) {
+    public ResponseEntity<ApiResponse<UserInfoResponse>> updateUserById(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Cập nhật thông ttin thành công",
@@ -63,7 +65,7 @@ public class UserController {
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAuthority('USER_DELETE')")
-    public ResponseEntity<ApiResponse<Object>> deleteUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Object>> deleteUserById(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -75,7 +77,7 @@ public class UserController {
 
     @PatchMapping("/{id}/lock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Object>> lockUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Object>> lockUser(@PathVariable UUID id) {
         userService.lockUser(id);
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -86,7 +88,7 @@ public class UserController {
 
     @PatchMapping("/{id}/unlock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Object>> unlockUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Object>> unlockUser(@PathVariable UUID id) {
         userService.unlockUser(id);
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -94,9 +96,10 @@ public class UserController {
                 )
         );
     }
+
     @PostMapping("/{id}/roles")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<UserInfoResponse>> assignRoles( @PathVariable Long id,@Valid @RequestBody AssignRoleRequest request) {
+    public ResponseEntity<ApiResponse<UserInfoResponse>> assignRoles(@PathVariable UUID id, @Valid @RequestBody AssignRoleRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Gán role thành công",
@@ -106,7 +109,7 @@ public class UserController {
 
     @DeleteMapping("/{id}/roles")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Object>> removeRoles(@PathVariable Long id, @Valid @RequestBody AssignRoleRequest request) {
+    public ResponseEntity<ApiResponse<Object>> removeRoles(@PathVariable UUID id, @Valid @RequestBody AssignRoleRequest request) {
 
         return ResponseEntity.ok(
                 ApiResponse.success("Xoá role khỏi user thành công", userService.removeRoles(id, request))
@@ -121,8 +124,6 @@ public class UserController {
                 ApiResponse.success("Đổi mật khẩu thành công", null)
         );
     }
-
-
 
 
 }

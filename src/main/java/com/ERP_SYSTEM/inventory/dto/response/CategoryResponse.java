@@ -1,4 +1,10 @@
 package com.ERP_SYSTEM.inventory.dto.response;
 
-public record CategoryResponse() {
+import java.util.UUID;
+
+public record CategoryResponse(
+        UUID id,
+        String name,
+        String description
+) {
 }

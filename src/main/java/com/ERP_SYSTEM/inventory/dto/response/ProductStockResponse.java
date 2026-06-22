@@ -1,4 +1,13 @@
 package com.ERP_SYSTEM.inventory.dto.response;
 
-public record ProductStockResponse() {
+import java.util.UUID;
+
+public record ProductStockResponse(
+        UUID id,
+        ProductResponse product,
+        WarehouseResponse warehouse,
+        Integer quantity,
+        Integer minQuantity,
+        Boolean lowStock
+) {
 }

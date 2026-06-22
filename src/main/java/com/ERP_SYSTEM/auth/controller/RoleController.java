@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/api/v1/roles")
@@ -22,7 +23,7 @@ public class RoleController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<RoleResponse>> createRoled(@Valid @RequestBody CreateRoleRequest  request){
+    public ResponseEntity<ApiResponse<RoleResponse>> createRoled(@Valid @RequestBody CreateRoleRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success("Tạo role thành công", roleService.createRole(request))
         );
@@ -30,14 +31,15 @@ public class RoleController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles(){
+    public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles() {
         return ResponseEntity.ok(
                 ApiResponse.success(roleService.getAllRoles())
         );
     }
+
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<RoleResponse>> getRoleById(@PathVariable Long id){
+    public ResponseEntity<ApiResponse<RoleResponse>> getRoleById(@PathVariable UUID id) {
         return ResponseEntity.ok(
                 ApiResponse.success(roleService.getRoleById(id))
         );
@@ -46,11 +48,11 @@ public class RoleController {
 
     @PostMapping("/{id}/permissions")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<RoleResponse>>  addPermissions(@PathVariable Long id, @Valid @RequestBody Set<String> permissions){
+    public ResponseEntity<ApiResponse<RoleResponse>> addPermissions(@PathVariable UUID id, @Valid @RequestBody Set<String> permissions) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Thêm Permission thành công",
-                        roleService.addPermissionsToRole(id,permissions)
+                        roleService.addPermissionsToRole(id, permissions)
                 )
         );
     }
@@ -58,7 +60,7 @@ public class RoleController {
     @DeleteMapping("/{id}/permissions")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> removePermissions(
-            @PathVariable Long id,
+            @PathVariable UUID id,
             @RequestBody Set<String> permissions) {
         return ResponseEntity.ok(
                 ApiResponse.success(

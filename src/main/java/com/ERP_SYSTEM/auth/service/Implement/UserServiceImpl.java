@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,14 +40,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserInfoResponse getUserById(Long id) {
+    public UserInfoResponse getUserById(UUID id) {
         User user = findUserById(id);
         return userMapper.toUserInfoResponse(user);
     }
 
     @Override
     @Transactional
-    public UserInfoResponse updateUser(Long id, UpdateUserRequest request) {
+    public UserInfoResponse updateUser(UUID id, UpdateUserRequest request) {
         User user = findUserById(id);
         // Kiểm tra email mới có bị trùng không
         if (request.getEmail() != null
@@ -66,7 +67,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void deleteUser(Long id) {
+    public void deleteUser(UUID id) {
         User user = findUserById(id);
         userRepository.delete(user);
 
@@ -75,7 +76,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
 
-    public void lockUser(Long id) {
+    public void lockUser(UUID id) {
         User user = findUserById(id);
         user.setEnabled(false);
         userRepository.save(user);
@@ -83,7 +84,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public void unlockUser(Long id) {
+    public void unlockUser(UUID id) {
         User user = findUserById(id);
         user.setEnabled(true);
         userRepository.save(user);
@@ -92,11 +93,11 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserInfoResponse assignRoles(Long id, AssignRoleRequest request) {
+    public UserInfoResponse assignRoles(UUID id, AssignRoleRequest request) {
         User user = findUserById(id);
         Set<Role> rolesToAdd = request.getRoles().stream().map(rolename -> roleRepository
-                .findByName(rolename)
-                .orElseThrow(()-> new RuntimeException("Không tìm thấy role" + rolename)))
+                        .findByName(rolename)
+                        .orElseThrow(() -> new RuntimeException("Không tìm thấy role" + rolename)))
                 .collect(Collectors.toSet());
         user.getRoles().addAll(rolesToAdd);
         userRepository.save(user);
@@ -106,7 +107,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public UserInfoResponse removeRoles(Long id,
+    public UserInfoResponse removeRoles(UUID id,
                                         AssignRoleRequest request) {
         User user = findUserById(id);
 
@@ -154,7 +155,7 @@ public class UserServiceImpl implements UserService {
     }
 
     // ── Helper method ────────────────────────────────────
-    private User findUserById(Long id) {
+    private User findUserById(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(
                         "Không tìm thấy user với id: " + id

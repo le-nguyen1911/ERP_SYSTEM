@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,7 +48,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public RoleResponse addPermissionsToRole(Long id, Set<String> permissions) {
+    public RoleResponse addPermissionsToRole(UUID id, Set<String> permissions) {
         Role role = findRoleById(id);
         Set<Permission> newPermissions = permissionRepository.findByNameIn(permissions);
         role.getPermissions().addAll(newPermissions);
@@ -58,7 +59,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional
-    public RoleResponse removePermissionsFromRole(Long id, Set<String> permissions) {
+    public RoleResponse removePermissionsFromRole(UUID id, Set<String> permissions) {
         Role role = findRoleById(id);
         Set<Permission> Permissions = permissionRepository.findByNameIn(permissions);
 
@@ -77,13 +78,13 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public RoleResponse getRoleById(Long id) {
+    public RoleResponse getRoleById(UUID id) {
         return roleMapper.toRoleResponse(findRoleById(id));
     }
 
-    private Role findRoleById(Long id) {
+    private Role findRoleById(UUID id) {
         return roleRepository.findById(id).orElseThrow(
-                ()-> new RuntimeException("Không tìm thấy role với id" + id)
+                () -> new RuntimeException("Không tìm thấy role với id" + id)
         );
     }
 }

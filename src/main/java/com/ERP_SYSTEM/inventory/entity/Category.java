@@ -15,15 +15,15 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class Category extends BaseEntity {
-
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
+
     private String description;
 
     @OneToMany(
             mappedBy = "category",
             fetch = FetchType.LAZY,
-            cascade = {CascadeType.MERGE, CascadeType.PERSIST}
-    )
+            cascade = CascadeType.ALL)
+    @Builder.Default
     private List<Product> products = new ArrayList<>();
 }

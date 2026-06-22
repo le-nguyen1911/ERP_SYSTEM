@@ -14,13 +14,14 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 public class Warehouse extends BaseEntity {
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     private String location;
     private String description;
 
-    @Builder.Default
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
+
 }
