@@ -8,10 +8,8 @@ import java.util.UUID;
 
 public record StockTransactionRequest(
         @NotNull(message = "Mã sản phẩm không đuược bỏ trống")
-        @Positive(message = "Mã sản phẩm không hợp lệ")
         UUID productId,
         @NotNull(message = "Mã kho không đuược bỏ trống")
-        @Positive(message = "Mã kho không hợp lệ")
         UUID warehouseId,
 
         @NotNull(message = "Loại giao dịch không được để trống")

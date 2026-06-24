@@ -18,6 +18,11 @@ public interface ProductStockRepository extends JpaRepository<ProductStock, UUID
 
     List<ProductStock> findByWarehouseId(UUID warehouseId);
 
+    boolean existsByWarehouseIdAndQuantityGreaterThan(
+            UUID warehouseId,
+            Integer quantity
+    );
+
     @Query("""
                         SELECT ps FROM ProductStock ps
                         WHERE ps.quantity <= ps.minQuantity

@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.common.exception;
 
 import com.ERP_SYSTEM.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -23,14 +24,14 @@ public class GlobalExceptionHandler {
     //Bắt lỗi thrown
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Object>> handlerRuntimeException(RuntimeException ex) {
-        ApiResponse<Object> errors = ApiResponse.errors("Có lỗi xảy ra",ex.getMessage());
+        ApiResponse<Object> errors = ApiResponse.errors("Có lỗi xảy ra", ex.getMessage());
         return ResponseEntity.badRequest().body(errors);
     }
 
     //Bắt lỗi valid fail
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Object>> handlerMethodArgumentNotValidException(MethodArgumentNotValidException ex){
-        Map<String , String> fieldErrors  = new HashMap<>();// gom tất cả lỗi vào rhanhf 1 mảng
+    public ResponseEntity<ApiResponse<Object>> handlerMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = new HashMap<>();// gom tất cả lỗi vào rhanhf 1 mảng
 
         ex.getBindingResult().getAllErrors().forEach(
                 error -> {
@@ -44,9 +45,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.errors("Dữ liệu không hợp lệ", fieldErrors.toString()));
     }
+
     //bắt lỗi username và password
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse<Object>> HandlerBadCredentialsException(BadCredentialsException ex){
+    public ResponseEntity<ApiResponse<Object>> HandlerBadCredentialsException(BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.errors(
                         "Đăng nhập thất bại",
@@ -55,13 +57,14 @@ public class GlobalExceptionHandler {
 
     //bắt lỗi tài khoản vô hiệu hoá
     @ExceptionHandler(DisabledException.class)
-    public ResponseEntity<ApiResponse<Object>> handlerDisableException(DisabledException ex){
+    public ResponseEntity<ApiResponse<Object>> handlerDisableException(DisabledException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(ApiResponse.errors(
                         "Đăng nhập thất bại",
                         "Tài khoản bị vô hiệu hoá"
                 ));
     }
+
     //bắt lỗi role
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDenied(
@@ -73,6 +76,46 @@ public class GlobalExceptionHandler {
                         "Bạn không có quyền thực hiện thao tác này"
                 ));
     }
+
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiResponse<Object>> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.errors(ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiResponse<Object>> handleDuplicateResourceException(DuplicateResourceException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    public ResponseEntity<ApiResponse<Object>> handleStock(
+            InsufficientStockException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Object>> handleAccess(
+            AccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
+
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Object>> handleOptimisticLock(
+            OptimisticLockingFailureException ex) {
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(
+                        "Hệ thống đang xử lý nhiều giao dịch " +
+                                "cùng lúc. Vui lòng thử lại sau giây lát."
+                ));
+    }
+
 
     //lỗi hệ thóng
     @ExceptionHandler(Exception.class)

@@ -12,4 +12,6 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
     Optional<Unit> findByName(String name);
 
     boolean existsByName(String name);
+
+    boolean existsProductByUnitId(UUID id);
 }

@@ -15,4 +15,6 @@ public interface WarehouseRepository extends JpaRepository<Warehouse, UUID> {
     boolean existsByName(String name);
 
     List<Warehouse> findByActiveTrue();
+
+
 }
