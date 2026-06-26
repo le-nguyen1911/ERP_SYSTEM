@@ -5,7 +5,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;
 -- BẢNG ROLES
 -- =============================================
 CREATE TABLE IF NOT EXISTS roles (
-                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(50) NOT NULL UNIQUE,
 
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS roles (
 -- BẢNG PERMISSIONS
 -- =============================================
 CREATE TABLE IF NOT EXISTS permissions (
-                                           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     name VARCHAR(100) NOT NULL UNIQUE,
 
@@ -33,16 +33,13 @@ CREATE TABLE IF NOT EXISTS permissions (
 -- BẢNG ROLE_PERMISSIONS
 -- =============================================
 CREATE TABLE IF NOT EXISTS role_permissions (
-                                                role_id UUID NOT NULL,
-                                                permission_id UUID NOT NULL,
-
-                                                PRIMARY KEY (role_id, permission_id),
-
+    role_id UUID NOT NULL,
+    permission_id UUID NOT NULL,
+    PRIMARY KEY (role_id, permission_id),
     CONSTRAINT fk_role_permissions_role
     FOREIGN KEY (role_id)
     REFERENCES roles(id)
     ON DELETE CASCADE,
-
     CONSTRAINT fk_role_permissions_permission
     FOREIGN KEY (permission_id)
     REFERENCES permissions(id)
@@ -53,7 +50,7 @@ CREATE TABLE IF NOT EXISTS role_permissions (
 -- BẢNG USERS
 -- =============================================
 CREATE TABLE IF NOT EXISTS users (
-                                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     username VARCHAR(50) NOT NULL UNIQUE,
 
@@ -75,10 +72,10 @@ CREATE TABLE IF NOT EXISTS users (
 -- BẢNG USER_ROLES
 -- =============================================
 CREATE TABLE IF NOT EXISTS user_roles (
-                                          user_id UUID NOT NULL,
-                                          role_id UUID NOT NULL,
+    user_id UUID NOT NULL,
+    role_id UUID NOT NULL,
 
-                                          PRIMARY KEY (user_id, role_id),
+    PRIMARY KEY (user_id, role_id),
 
     CONSTRAINT fk_user_roles_user
     FOREIGN KEY (user_id)
@@ -95,7 +92,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
 -- BẢNG REFRESH_TOKENS
 -- =============================================
 CREATE TABLE IF NOT EXISTS refresh_tokens (
-                                              id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
     token VARCHAR(255) NOT NULL UNIQUE,
 

@@ -3,16 +3,7 @@
 
 -- Thay vì BIGSERIAL, dùng:
 CREATE TABLE IF NOT EXISTS categories (
-                                          id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    -- UUID PRIMARY KEY:
-    -- PostgreSQL native UUID type (16 bytes)
-    -- DEFAULT gen_random_uuid(): PostgreSQL
-    --   tự sinh UUID nếu không truyền vào
-    --   (backup cho trường hợp không qua Java)
-    -- Trong thực tế, Java sinh UUID v7 và
-    --   truyền vào INSERT — DEFAULT không dùng
-    --   nhưng vẫn tốt để có
-
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(100) NOT NULL,
     description VARCHAR(255),
     created_at  TIMESTAMP,
@@ -22,7 +13,7 @@ CREATE TABLE IF NOT EXISTS categories (
     );
 
 CREATE TABLE IF NOT EXISTS units (
-                                     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(50) NOT NULL,
     description VARCHAR(255),
     created_at  TIMESTAMP,
@@ -31,7 +22,7 @@ CREATE TABLE IF NOT EXISTS units (
     );
 
 CREATE TABLE IF NOT EXISTS warehouses (
-                                          id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(100) NOT NULL,
     location    VARCHAR(255),
     description VARCHAR(255),
@@ -42,7 +33,7 @@ CREATE TABLE IF NOT EXISTS warehouses (
     );
 
 CREATE TABLE IF NOT EXISTS products (
-                                        id           UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
+    id           UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     code         VARCHAR(50)    NOT NULL,
     name         VARCHAR(200)   NOT NULL,
     description  TEXT,
@@ -67,7 +58,7 @@ CREATE TABLE IF NOT EXISTS products (
     );
 
 CREATE TABLE IF NOT EXISTS product_stocks (
-                                              id            UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id    UUID    NOT NULL,
     -- UUID FK
     warehouse_id  UUID    NOT NULL,
@@ -96,7 +87,7 @@ CREATE TABLE IF NOT EXISTS product_stocks (
     );
 
 CREATE TABLE IF NOT EXISTS stock_transactions (
-                                                  id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
+    id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id    UUID         NOT NULL,
     warehouse_id  UUID         NOT NULL,
     type          VARCHAR(10)  NOT NULL,
