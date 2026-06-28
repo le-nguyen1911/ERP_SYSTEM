@@ -16,7 +16,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.nio.file.LinkOption;
 
 @Slf4j
 @Component
@@ -33,11 +32,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         try {
             String token = extractToken(request);
-            if(StringUtils.hasText(token)&& jwtTokenProvider.validateToken(token)){
+            if (StringUtils.hasText(token) && jwtTokenProvider.validateToken(token)) {
                 String username = jwtTokenProvider.getUsernameFromToken(token);
-                //giai mã token lấy username
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                //user trong db load cả rle và permission
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
 
@@ -47,16 +44,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         } catch (Exception e) {
-            log.error("LỖI XÁC THỰC JWT",e.getMessage());
+            log.error("LỖI XÁC THỰC JWT", e.getMessage());
         }
         filterChain.doFilter(request, response);
-        // LUÔN cho request đi tiếp dù có token hay không
-        // Bỏ dòng này → request bị chặn lại, không đến Controller
+
     }
-    private String extractToken(HttpServletRequest request){
+
+    private String extractToken(HttpServletRequest request) {
         String header = request.getHeader("Authorization");
-        // đopcj header
-        if(StringUtils.hasText(header) && header.startsWith("Bearer ")){
+        if (StringUtils.hasText(header) && header.startsWith("Bearer ")) {
             return header.substring(7);
         }
         return null;

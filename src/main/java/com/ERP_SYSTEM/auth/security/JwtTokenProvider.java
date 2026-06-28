@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
-import java.util.jar.JarException;
 
 @Component
 public class JwtTokenProvider {
@@ -33,7 +32,6 @@ public class JwtTokenProvider {
     public String generateRefreshTokenValue() {
         return java.util.UUID.randomUUID().toString()
                 .replace("-", "");
-
     }
 
     public boolean isRefreshTokenRotationEnabled() {
@@ -41,7 +39,7 @@ public class JwtTokenProvider {
     }
 
 
-    private SecretKey getSigningKey(){
+    private SecretKey getSigningKey() {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
@@ -51,16 +49,13 @@ public class JwtTokenProvider {
                 userDetails.getUsername(), "access", accessTokenExpiration);
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(userDetails.getUsername(), "refresh", refreshTokenExpiration);
-    }
 
-    public String buildToken(String username, String type, long expiration){
+    public String buildToken(String username, String type, long expiration) {
         return Jwts.builder()
                 .subject(username)
                 .claim("type", type)
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis()+ expiration))
+                .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
                 .compact();
     }
@@ -70,21 +65,19 @@ public class JwtTokenProvider {
     }
 
     public boolean validateToken(String token) {
-        try{
+        try {
             parseClaims(token);
             return true;
 
-        }
-        catch (ExpiredJwtException e) {
-            throw  new RuntimeException("Token đã hết hạn");
-        }
-        catch (JwtException e){
-            throw  new RuntimeException("Token không hợp lệ");
+        } catch (ExpiredJwtException e) {
+            throw new RuntimeException("Token đã hết hạn");
+        } catch (JwtException e) {
+            throw new RuntimeException("Token không hợp lệ");
 
         }
     }
 
-    public Claims parseClaims(String token){
+    public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSigningKey())
                 .build()

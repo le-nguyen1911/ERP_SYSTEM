@@ -13,5 +13,5 @@ public interface UnitRepository extends JpaRepository<Unit, UUID> {
 
     boolean existsByName(String name);
 
-    boolean existsProductByUnitId(UUID id);
+    boolean existsProductById(UUID id);
 }

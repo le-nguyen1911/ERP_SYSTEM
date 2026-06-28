@@ -1,7 +1,5 @@
 -- V3__create_inventory_tables.sql
--- (Phần 4 đã viết — CẬP NHẬT kiểu cột id)
 
--- Thay vì BIGSERIAL, dùng:
 CREATE TABLE IF NOT EXISTS categories (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name        VARCHAR(100) NOT NULL,
@@ -60,7 +58,6 @@ CREATE TABLE IF NOT EXISTS products (
 CREATE TABLE IF NOT EXISTS product_stocks (
     id            UUID    PRIMARY KEY DEFAULT gen_random_uuid(),
     product_id    UUID    NOT NULL,
-    -- UUID FK
     warehouse_id  UUID    NOT NULL,
     quantity      INTEGER NOT NULL DEFAULT 0,
     min_quantity  INTEGER NOT NULL DEFAULT 0,

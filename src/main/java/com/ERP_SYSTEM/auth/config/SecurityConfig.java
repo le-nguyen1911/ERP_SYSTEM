@@ -18,8 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import java.security.Security;
-
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -30,9 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        // tắt csrf protection nếu ko tắt mọi request sẽ bị block
         http.csrf(AbstractHttpConfigurer::disable)
-                // 3 endpoint này sẽ được public ko cần jwt dòn lại đều cần
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/v1/auth/register",
@@ -41,7 +37,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                //ko trạo http session , mỗi rq đều mang jwt  nếu bỏ sẽ tốn ram
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 

@@ -39,4 +39,8 @@ public class ProductStock extends BaseEntity {
     @Column(nullable = false)
     private Integer minQuantity = 0;
 
+    @Version
+    @Column(nullable = false)
+    @Builder.Default
+    private Long version = 1L;
 }

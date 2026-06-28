@@ -71,7 +71,7 @@ public class UnitServiceImpl implements UnitService {
     @Transactional
     public void delete(UUID id) {
         Unit unit = findUnitById(id);
-        boolean hasProducts = unitRepository.existsProductByUnitId(id);
+        boolean hasProducts = unitRepository.existsProductById(id);
         if (!unit.getName().isEmpty()) {
             throw new RuntimeException("Đơn vị không được tìm thấy");
         }

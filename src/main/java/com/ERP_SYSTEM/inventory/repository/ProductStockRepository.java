@@ -1,8 +1,11 @@
 package com.ERP_SYSTEM.inventory.repository;
 
 import com.ERP_SYSTEM.inventory.entity.ProductStock;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -30,4 +33,15 @@ public interface ProductStockRepository extends JpaRepository<ProductStock, UUID
             """
     )
     List<ProductStock> findLowStockProducts();
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+                SELECT ps FROM ProductStock ps
+                        WHERE ps.product.id = :productId
+                        AND ps.warehouse.id = :warehouseId
+            """)
+    Optional<ProductStock> findByProductIdAndWarehouseIdForUpdate(
+            @Param("productId") Long productId,
+            @Param("warehouseId") Long warehouseId);
+
 }

@@ -23,7 +23,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found with username: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with username: " + username));
 
         Set<SimpleGrantedAuthority> authorities = new HashSet<>();
 
@@ -39,6 +39,9 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     ))
             );
         });
+        System.out.println("===== AUTHORITIES =====");
+        authorities.forEach(System.out::println);
+        System.out.println("=======================");
         return org.springframework.security.core.userdetails.User
                 .withUsername(user.getUsername())
                 .password(user.getPassword())

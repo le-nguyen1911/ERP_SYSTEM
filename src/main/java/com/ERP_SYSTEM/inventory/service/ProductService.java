@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface ProductService {
+    
     ProductResponse create(CreateProductRequest request);
 
     ProductResponse update(UUID id, UpdateProductRequest request);

@@ -17,8 +17,13 @@ import com.ERP_SYSTEM.inventory.repository.StockTransactionRepository;
 import com.ERP_SYSTEM.inventory.repository.WarehouseRepository;
 import com.ERP_SYSTEM.inventory.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +42,9 @@ public class StockServiceImpl implements StockService {
     private final StockMapper stockMapper;
 
     @Override
+    @Retryable(retryFor = OptimisticLockingFailureException.class,
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100, multiplier = 2))
     @Transactional
     public StockTransactionResponse processTransaction(StockTransactionRequest request) {
         Product product = productRepository.findById(request.productId())
@@ -99,11 +107,12 @@ public class StockServiceImpl implements StockService {
         return stockMapper.toStockTransactionResponse(transaction);
     }
 
+
     @Override
     @Transactional
     public List<StockTransactionResponse> transferStock(StockTransferRequest request) {
         if (request.fromWarehouseId().equals(request.toWarehouseId())) {
-            throw new RuntimeException("Kho nguòn và kho đích không khớp");
+            throw new RuntimeException("Kho nguồn và kho đích không được giống nhau");
         }
 
         String transferRef = "TRF-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -178,5 +187,25 @@ public class StockServiceImpl implements StockService {
         stock.setMinQuantity(request.minQuantity());
         productStockRepository.save(stock);
         return stockMapper.toProductStockResponse(stock);
+    }
+
+    private void validateTransactionPermission(TransactionType type) {
+        Authentication auth = SecurityContextHolder
+                .getContext().getAuthentication();
+
+        String requiredPermission = switch (type) {
+            case IMPORT -> "STOCK_IMPORT";
+            case EXPORT -> "STOCK_EXPORT";
+        };
+
+        boolean hasPermission = auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(requiredPermission));
+
+        if (!hasPermission) {
+            throw new AccessDeniedException(
+                    "Bạn không có quyền thực hiện giao dịch loại: "
+                            + type
+            );
+        }
     }
 }
