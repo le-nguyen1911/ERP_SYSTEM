@@ -90,6 +90,12 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findAll(pageable).map(productMapper::toProductResponse);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<ProductResponse> getByActive(Pageable pageable) {
+        return productRepository.findByActiveTrue(pageable).map(productMapper::toProductResponse);
+    }
+
 
     @Override
     @Transactional(readOnly = true)

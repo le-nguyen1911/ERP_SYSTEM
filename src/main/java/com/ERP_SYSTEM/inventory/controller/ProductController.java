@@ -24,8 +24,8 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('PRODUCT_VIEW')")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.success(productService.getAll(pageable)));
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProductsActive(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(productService.getByActive(pageable)));
     }
 
     @GetMapping("/search")
