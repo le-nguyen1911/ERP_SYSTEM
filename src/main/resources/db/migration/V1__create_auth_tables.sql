@@ -1,9 +1,7 @@
 -- Auth Module - UUID Version
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto SCHEMA public;
--- =============================================
 -- BẢNG ROLES
--- =============================================
 CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -15,9 +13,7 @@ CREATE TABLE IF NOT EXISTS roles (
     updated_at TIMESTAMP
     );
 
--- =============================================
 -- BẢNG PERMISSIONS
--- =============================================
 CREATE TABLE IF NOT EXISTS permissions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -29,9 +25,7 @@ CREATE TABLE IF NOT EXISTS permissions (
     updated_at TIMESTAMP
     );
 
--- =============================================
 -- BẢNG ROLE_PERMISSIONS
--- =============================================
 CREATE TABLE IF NOT EXISTS role_permissions (
     role_id UUID NOT NULL,
     permission_id UUID NOT NULL,
@@ -46,9 +40,7 @@ CREATE TABLE IF NOT EXISTS role_permissions (
     ON DELETE CASCADE
     );
 
--- =============================================
 -- BẢNG USERS
--- =============================================
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -68,9 +60,7 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP
     );
 
--- =============================================
 -- BẢNG USER_ROLES
--- =============================================
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
     role_id UUID NOT NULL,
@@ -88,9 +78,7 @@ CREATE TABLE IF NOT EXISTS user_roles (
     ON DELETE CASCADE
     );
 
--- =============================================
 -- BẢNG REFRESH_TOKENS
--- =============================================
 CREATE TABLE IF NOT EXISTS refresh_tokens (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -117,9 +105,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
     ON DELETE CASCADE
     );
 
--- =============================================
 -- INDEX
--- =============================================
 CREATE INDEX IF NOT EXISTS idx_users_username
     ON users(username);
 

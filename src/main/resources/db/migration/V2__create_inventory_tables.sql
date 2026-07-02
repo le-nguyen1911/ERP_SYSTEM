@@ -1,4 +1,4 @@
--- V3__create_inventory_tables.sql
+-- V2__create_inventory_tables.sql
 
 CREATE TABLE IF NOT EXISTS categories (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 
 @Slf4j
@@ -16,9 +17,6 @@ public class TokenCleanupTask {
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Scheduled(cron = "0 0 2 * * ?")
-    // Chạy lúc 2:00 AM mỗi ngày
-    // Cron format: giây phút giờ ngày tháng ngàyTrongTuần
-    // 0 0 2 * * ? = 0s 0m 2h mọi ngày
     @Transactional
     public void cleanupExpiredTokens() {
         log.info("Bắt đầu dọn dẹp token hết hạn...");
