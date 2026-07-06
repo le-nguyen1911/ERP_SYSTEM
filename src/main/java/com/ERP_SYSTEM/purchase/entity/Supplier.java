@@ -1,6 +1,6 @@
 package com.ERP_SYSTEM.purchase.entity;
 
-import com.ERP_SYSTEM.common.base.BaseEntity;
+import com.ERP_SYSTEM.common.base.SoftDeleteBaseEntity;
 import com.ERP_SYSTEM.purchase.enums.SupplierStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -12,66 +12,53 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Supplier extends BaseEntity {
-    @Column(name = "supplier_code", updatable = false)
+public class Supplier extends SoftDeleteBaseEntity {
+
+    @Column(name = "supplier_code", nullable = false, unique = true, length = 50)
     private String supplierCode;
 
-    @Column(name = "supplier_name")
+    @Column(name = "supplier_name", nullable = false, length = 255)
     private String supplierName;
 
-    @Column(name = "contact_person")
+    @Column(name = "contact_person", nullable = false, length = 100)
     private String contactPerson;
 
-    @Column(name = "email")
+    @Column(name = "email", nullable = false, length = 100)
     private String email;
 
-    @Column(name = "phone")
+    @Column(name = "phone", nullable = false, length = 20)
     private String phone;
 
-    @Column(name = "address", columnDefinition = "TEXT")
+    @Column(name = "address", nullable = false, columnDefinition = "TEXT")
     private String address;
 
-    @Column(name = "city")
+    @Column(name = "city", length = 100)
     private String city;
 
-    @Column(name = "country")
+    @Column(name = "country", length = 100)
     private String country;
 
-    @Column(name = "bank_name")
+    @Column(name = "bank_name", length = 100)
     private String bankName;
 
-    @Column(name = "bank_account_no")
+    @Column(name = "bank_account_no", length = 50)
     private String bankAccountNo;
 
-    @Column(name = "bank_account_holder")
+    @Column(name = "bank_account_holder", length = 100)
     private String bankAccountHolder;
 
-    @Column(name = "payment_terms")
+    @Column(name = "payment_terms", length = 50)
     private String paymentTerms;
 
-    @Column(name = "rating")
-    @Enumerated(EnumType.STRING)
+    @Column(name = "rating", nullable = false, length = 10)
     @Builder.Default
-    private SupplierRating rating = SupplierRating.B;
+    private String rating = "B";
 
-    @Column(name = "tax_id")
+    @Column(name = "tax_id", length = 50)
     private String taxId;
 
-    @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private SupplierStatus status = SupplierStatus.ACTIVE;
-
-    @Column(name = "is_deleted")
-    @Builder.Default
-    private Boolean isDeleted = false;
-
-    //helper method
-    public boolean isActive() {
-        return !isDeleted && status == SupplierStatus.ACTIVE;
-    }
-
-    public void delete() {
-        this.isDeleted = true;
-    }
+    private SupplierStatus staus = SupplierStatus.ACTIVE;
 }
