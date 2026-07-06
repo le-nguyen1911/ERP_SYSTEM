@@ -1,10 +1,7 @@
 package com.ERP_SYSTEM.purchase.enums;
 
-
-public enum QualityCheckStatus {
-
+public enum InventoryImportStatus {
     PENDING,
-    PASSED,
+    SUCCESS,
     FAILED
-
 }
