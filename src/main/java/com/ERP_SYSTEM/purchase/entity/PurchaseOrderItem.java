@@ -22,11 +22,9 @@ public class PurchaseOrderItem extends SoftDeleteBaseEntity {
     @JoinColumn(name = "purchase_order_id", nullable = false)
     private PurchaseOrder purchaseOrder;
 
-    // Cross-module reference tới Inventory Module (products)
     @Column(name = "product_id", nullable = false)
     private UUID productId;
 
-    // Snapshot pattern: đóng băng thông tin sản phẩm tại thời điểm đặt hàng
     @Column(name = "product_code", nullable = false, length = 50)
     private String productCode;
 
