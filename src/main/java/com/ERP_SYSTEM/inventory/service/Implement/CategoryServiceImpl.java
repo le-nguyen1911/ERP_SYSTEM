@@ -81,6 +81,6 @@ public class CategoryServiceImpl implements CategoryService {
 
     private Category findCategoryById(UUID id) {
         return categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy dnah mục"));
     }
 }

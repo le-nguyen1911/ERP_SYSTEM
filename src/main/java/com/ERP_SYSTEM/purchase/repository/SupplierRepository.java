@@ -16,9 +16,9 @@ import java.util.UUID;
 public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
     Optional<Supplier> findByIdAndIsDeletedFalse(UUID id);
 
-    Optional<Supplier> findBySupplierCodeAndIsDeletedFalse(UUID supplierCode);
+    Optional<Supplier> findBySupplierCodeAndIsDeletedFalse(String supplierCode);
 
-    boolean existsBySupplierCodeAndIsDeletedFalse(UUID supplierCode);
+    boolean existsBySupplierCodeAndIsDeletedFalse(String supplierCode);
 
     Page<Supplier> findByIsDeletedFalse(Pageable pageable);
 

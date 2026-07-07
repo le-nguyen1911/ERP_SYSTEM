@@ -60,5 +60,5 @@ public class Supplier extends SoftDeleteBaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 20)
     @Builder.Default
-    private SupplierStatus staus = SupplierStatus.ACTIVE;
+    private SupplierStatus status = SupplierStatus.ACTIVE;
 }
