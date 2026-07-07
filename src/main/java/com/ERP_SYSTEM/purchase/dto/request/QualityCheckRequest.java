@@ -1,4 +1,12 @@
 package com.ERP_SYSTEM.purchase.dto.request;
 
-public record QualityCheckRequest() {
+import com.ERP_SYSTEM.purchase.enums.QualityCheckStatus;
+import jakarta.validation.constraints.NotNull;
+
+public record QualityCheckRequest(
+        @NotNull(message = "Kết quả kiểm tra chất lượng không được để trống")
+        QualityCheckStatus result,
+
+        String notes
+) {
 }
