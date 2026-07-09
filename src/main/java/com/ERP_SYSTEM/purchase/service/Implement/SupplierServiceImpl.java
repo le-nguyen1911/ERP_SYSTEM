@@ -1,5 +1,6 @@
 package com.ERP_SYSTEM.purchase.service.Implement;
 
+import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.purchase.dto.request.CreateSupplierRequest;
 import com.ERP_SYSTEM.purchase.dto.request.SupplierSearchRequest;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -31,7 +33,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Transactional
     public SupplierResponse create(CreateSupplierRequest request) {
         if (supplierRepository.existsBySupplierCodeAndIsDeletedFalse(request.supplierCode())) {
-            throw new RuntimeException("Nhà cung cấp đã tồn tại");
+            throw new DuplicateResourceException("Nhà cung cấp đã tồn tại");
         }
         Supplier supplier = supplierMapper.toEntity(request);
 
@@ -49,7 +51,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Transactional
     public SupplierResponse update(UUID id, UpdateSupplierRequest request) {
         Supplier supplier = supplierRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
         supplierMapper.updateEntityFromRequest(request, supplier);
         return supplierMapper.toResponse(supplier);
     }
@@ -58,7 +60,7 @@ public class SupplierServiceImpl implements SupplierService {
     @Transactional(readOnly = true)
     public SupplierResponse getById(UUID id) {
         Supplier supplier = supplierRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhà cung cấp"));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cung cấp"));
         return supplierMapper.toResponse(supplier);
     }
 
@@ -70,7 +72,7 @@ public class SupplierServiceImpl implements SupplierService {
     }
 
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public Page<SupplierResponse> search(SupplierSearchRequest request, Pageable pageable) {
         return supplierRepository.searchSuppliers(request.keyword(), request.status(), pageable)
                 .map(supplierMapper::toResponse);
@@ -79,22 +81,27 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     @Transactional
     public void delete(UUID id) {
+
         Supplier supplier = supplierRepository.findByIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy nhà cung cấp với id: " + id));
 
-        boolean hasActivePurchaseOrders = purchaseOrderRepository.findBySupplierIdAndIsDeletedFalse(id, org.springframework.data.domain.Pageable.unpaged())
-                .stream()
-                .anyMatch(po -> po.getStatus() != PurchaseOrderStatus.CLOSED
-                        && po.getStatus() != PurchaseOrderStatus.CANCELLED
-                        && po.getStatus() != PurchaseOrderStatus.REJECTED);
+        List<PurchaseOrderStatus> excludedStatuses = List.of(
+                PurchaseOrderStatus.CLOSED,
+                PurchaseOrderStatus.CANCELLED,
+                PurchaseOrderStatus.REJECTED);
+
+        boolean hasActivePurchaseOrders =
+                supplierRepository.existsActiveBySupplierId(id, excludedStatuses);
+
         if (hasActivePurchaseOrders) {
             throw new IllegalStateException(
                     "Không thể xoá nhà cung cấp đang có đơn đặt hàng chưa hoàn tất");
         }
-        supplier.setIsDeleted(true);
-        supplier.setStatus(SupplierStatus.ACTIVE);
-    }
 
+        supplier.setIsDeleted(true);
+        supplier.setStatus(SupplierStatus.INACTIVE);
+
+    }
 
 }
