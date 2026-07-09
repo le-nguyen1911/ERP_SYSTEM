@@ -17,12 +17,7 @@ import java.util.List;
 )
 public interface PurchaseOrderMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "purchaseOrder", ignore = true)
-    @Mapping(target = "lineNumber", ignore = true)
-    @Mapping(target = "receivedQuantity", ignore = true)
-    @Mapping(target = "rejectedQuantity", ignore = true)
-    @Mapping(target = "status", ignore = true)
+
     PurchaseOrderItem toItemEntity(PurchaseOrderItemRequest request);
 
 
@@ -36,6 +31,6 @@ public interface PurchaseOrderMapper {
     PurchaseOrderSummaryResponse toSummaryResponse(PurchaseOrder purchaseOrder);
 
     List<PurchaseOrderSummaryResponse> toSummaryResponseList(List<PurchaseOrder> purchaseOrders);
-    
+
     PurchaseOrderDetailResponse toDetailResponse(PurchaseOrder purchaseOrder);
 }

@@ -99,6 +99,8 @@ public class PurchaseOrder extends SoftDeleteBaseEntity {
     @Column(name = "cancellation_reason", columnDefinition = "TEXT")
     private String cancellationReason;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
 
     @Version
     @Column(name = "version", nullable = false)
@@ -113,7 +115,7 @@ public class PurchaseOrder extends SoftDeleteBaseEntity {
     @Builder.Default
     private List<PurchaseOrderItem> items = new ArrayList<>();
 
-    
+
     public void addItem(PurchaseOrderItem item) {
         items.add(item);
         item.setPurchaseOrder(this);

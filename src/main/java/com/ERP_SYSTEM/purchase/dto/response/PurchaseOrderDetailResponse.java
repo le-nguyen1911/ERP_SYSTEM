@@ -32,6 +32,7 @@ public record PurchaseOrderDetailResponse(
         UUID cancelledById,
         LocalDateTime cancelledAt,
         String cancellationReason,
+        String rejectionReason,
         List<PurchaseOrderItemResponse> items,
         LocalDateTime createdAt,
         LocalDateTime updatedAt

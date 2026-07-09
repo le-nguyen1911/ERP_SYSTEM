@@ -30,6 +30,9 @@ public class PurchaseRequisition extends SoftDeleteBaseEntity {
     @Column(name = "purpose", columnDefinition = "TEXT")
     private String purpose;
 
+    @Column(name = "purchase_order_id")
+    private UUID purchaseOrderId;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 30)
     @Builder.Default
@@ -44,6 +47,5 @@ public class PurchaseRequisition extends SoftDeleteBaseEntity {
     @Column(name = "approval_date")
     private LocalDateTime approvalDate;
 
-    @Column(name = "purchase_order_id")
-    private UUID purchaseOrderId;
+
 }

@@ -13,6 +13,7 @@ import com.ERP_SYSTEM.purchase.enums.PurchaseOrderStatus;
 import com.ERP_SYSTEM.purchase.enums.SupplierStatus;
 import com.ERP_SYSTEM.purchase.mapper.PurchaseOrderMapper;
 import com.ERP_SYSTEM.purchase.repository.PurchaseOrderRepository;
+import com.ERP_SYSTEM.purchase.repository.SequenceRepository;
 import com.ERP_SYSTEM.purchase.repository.SupplierRepository;
 import com.ERP_SYSTEM.purchase.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,6 @@ import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -37,6 +37,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final SupplierRepository supplierRepository;
     private final PurchaseOrderMapper purchaseOrderMapper;
     private final UserRepository userRepository;
+    private final SequenceRepository sequenceRepository;
+
 
     private static final Map<PurchaseOrderStatus, Set<PurchaseOrderStatus>> VALID_TRANSITIONS =
             new EnumMap<>(PurchaseOrderStatus.class);
@@ -130,8 +132,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     private String generatePoNumber() {
         String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        int randomPart = ThreadLocalRandom.current().nextInt(1000, 10000);
-        return "PO-" + datePart + "-" + randomPart;
+        Long sequenceValue = sequenceRepository.nextPoNumberSequence();
+        return "PO-" + datePart + "-" + String.format("%06d", sequenceValue);
     }
 
     @Override
@@ -218,10 +220,14 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public PurchaseOrderDetailResponse reject(UUID id, RejectPurchaseOrderRequest request) {
+
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.REJECTED);
+
         purchaseOrder.setStatus(PurchaseOrderStatus.REJECTED);
-        purchaseOrder.setCancellationReason(request.reason());
+
+        purchaseOrder.setRejectionReason(request.reason());
+
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 

@@ -1,0 +1,24 @@
+
+CREATE SEQUENCE IF NOT EXISTS seq_po_number
+    START WITH 1
+    INCREMENT BY 1
+    NO CYCLE;
+
+CREATE SEQUENCE IF NOT EXISTS seq_gr_number
+    START WITH 1
+    INCREMENT BY 1
+    NO CYCLE;
+
+
+CREATE SEQUENCE IF NOT EXISTS seq_pr_number
+    START WITH 1
+    INCREMENT BY 1
+    NO CYCLE;
+
+
+ALTER TABLE purchase_order
+    ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
+
+
+ALTER TABLE purchase_requisition
+    ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
