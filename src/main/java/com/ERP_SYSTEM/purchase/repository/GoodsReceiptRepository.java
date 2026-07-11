@@ -30,6 +30,8 @@ public interface GoodsReceiptRepository extends JpaRepository<GoodsReceipt, UUID
 
     Page<GoodsReceipt> findByPurchaseOrderIdAndIsDeletedFalse(UUID purchaseOrderId, Pageable pageable);
 
+    Page<GoodsReceipt> findByIsDeletedFalse(Pageable pageable);
+
     Page<GoodsReceipt> findBySupplierIdAndIsDeletedFalse(UUID supplierId, Pageable pageable);
 
     Page<GoodsReceipt> findByStatusAndIsDeletedFalse(GoodsReceiptStatus status, Pageable pageable);

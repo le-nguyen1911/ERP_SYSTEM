@@ -24,6 +24,5 @@ public interface GoodsReceiptMapper {
 
     List<GoodsReceiptSummaryResponse> toSummaryResponseList(List<GoodsReceipt> goodsReceipts);
 
-
     GoodsReceiptDetailResponse toDetailResponse(GoodsReceipt goodsReceipt);
 }
