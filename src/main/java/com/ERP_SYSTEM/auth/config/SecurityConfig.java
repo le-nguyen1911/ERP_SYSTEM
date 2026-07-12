@@ -45,7 +45,7 @@ public class SecurityConfig {
 
     }
 
-    // hash password thành salt ngẫu nhiên
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();

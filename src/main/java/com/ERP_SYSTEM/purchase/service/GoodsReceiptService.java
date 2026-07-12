@@ -18,15 +18,11 @@ public interface GoodsReceiptService {
 
     Page<GoodsReceiptSummaryResponse> getByPurchaseOrder(UUID purchaseOrderId, Pageable pageable);
 
-    // Chuyển DRAFT -> RECEIVED
     GoodsReceiptDetailResponse markAsReceived(UUID id);
 
-    // Thực hiện QC, nếu PASSED sẽ tự động trigger gọi Inventory Module
     GoodsReceiptDetailResponse performQualityCheck(UUID id, QualityCheckRequest request);
 
-    // Cho phép gọi lại thủ công (hoặc scheduler gọi tự động) khi
     GoodsReceiptDetailResponse retryInventoryImport(UUID id);
-
 
     void retryAllFailedInventoryImports();
 

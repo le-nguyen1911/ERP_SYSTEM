@@ -1,5 +1,6 @@
 package com.ERP_SYSTEM.purchase.mapper;
 
+import com.ERP_SYSTEM.purchase.dto.request.AddPurchaseOrderItemRequest;
 import com.ERP_SYSTEM.purchase.dto.request.PurchaseOrderItemRequest;
 import com.ERP_SYSTEM.purchase.dto.response.PurchaseOrderDetailResponse;
 import com.ERP_SYSTEM.purchase.dto.response.PurchaseOrderItemResponse;
@@ -20,6 +21,7 @@ public interface PurchaseOrderMapper {
 
     PurchaseOrderItem toItemEntity(PurchaseOrderItemRequest request);
 
+    PurchaseOrderItem toItemEntity(AddPurchaseOrderItemRequest request);
 
     PurchaseOrderItemResponse toItemResponse(PurchaseOrderItem item);
 

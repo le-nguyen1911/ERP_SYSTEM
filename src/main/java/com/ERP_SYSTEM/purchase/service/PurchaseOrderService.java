@@ -17,7 +17,13 @@ public interface PurchaseOrderService {
 
     Page<PurchaseOrderSummaryResponse> getAll(Pageable pageable);
 
-    Page<PurchaseOrderSummaryResponse> search(PurchaseOrderSearchRequest request, Pageable pageable);
+    Page<PurchaseOrderSummaryResponse> search(PurchaseOrderSearchRequest searchRequest, Pageable pageable);
+
+    PurchaseOrderDetailResponse addItem(UUID poId, AddPurchaseOrderItemRequest request);
+
+    PurchaseOrderDetailResponse updateItem(UUID poId, UUID itemId, UpdatePurchaseOrderItemRequest request);
+
+    PurchaseOrderDetailResponse removeItem(UUID poId, UUID itemId);
 
     PurchaseOrderDetailResponse submitForApproval(UUID id);
 

@@ -17,6 +17,7 @@ import com.ERP_SYSTEM.purchase.repository.SequenceRepository;
 import com.ERP_SYSTEM.purchase.repository.SupplierRepository;
 import com.ERP_SYSTEM.purchase.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -32,6 +33,7 @@ import java.util.*;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final SupplierRepository supplierRepository;
@@ -54,9 +56,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 EnumSet.of(PurchaseOrderStatus.GOODS_RECEIVED, PurchaseOrderStatus.CANCELLED));
         VALID_TRANSITIONS.put(PurchaseOrderStatus.GOODS_RECEIVED,
                 EnumSet.of(PurchaseOrderStatus.CLOSED));
-        // REJECTED, CANCELLED, CLOSED là trạng thái cuối (terminal state)
-        // - không có transition nào đi ra từ đây, nên không cần put vào Map
-        // (Map.get() trả về null -> validateTransition() sẽ coi Set rỗng).
     }
 
     private void validateTransition(PurchaseOrderStatus from, PurchaseOrderStatus to) {
@@ -70,6 +69,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public PurchaseOrderDetailResponse create(CreatePurchaseOrderRequest request) {
+        log.info("Bắt đầu tạo đơn đặt hàng cho supplier={}", request.supplierId());
         Supplier supplier = supplierRepository.findByIdAndIsDeletedFalse(request.supplierId())
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhà cng cấp"));
         if (supplier.getStatus() != SupplierStatus.ACTIVE) {
@@ -80,7 +80,6 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .poNumber(generatePoNumber())
                 .supplier(supplier)
                 .warehouseId(request.warehouseId())
-                .requisitionId(request.requisitionId())
                 .poDate(LocalDateTime.now())
                 .deliveryDate(request.deliveryDate())
                 .currency(request.currency())
@@ -139,6 +138,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Override
     @Transactional
     public PurchaseOrderDetailResponse update(UUID id, UpdatePurchaseOrderRequest request) {
+        log.info("Bắt đầu cập nhật đơn đặt hàng id={}", id);
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn hàng"));
         if (purchaseOrder.getStatus() != PurchaseOrderStatus.DRAFT) {
@@ -160,7 +160,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
 
         recalculateTotals(purchaseOrder);
-
+        log.info("Cập nhật đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
@@ -195,25 +195,107 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Override
     @Transactional
+    public PurchaseOrderDetailResponse addItem(UUID poId, AddPurchaseOrderItemRequest request) {
+        log.info("Thêm dòng sản phẩm vào đơn đặt hàng id={}", poId);
+
+        PurchaseOrder purchaseOrder = getForUpdateOrThrow(poId);
+        validateDraftForItemModification(purchaseOrder);
+
+        PurchaseOrderItem item = purchaseOrderMapper.toItemEntity(request);
+
+        int nextLineNumber = purchaseOrder.getItems().stream()
+                .mapToInt(PurchaseOrderItem::getLineNumber)
+                .max()
+                .orElse(0) + 1;
+        item.setLineNumber(nextLineNumber);
+
+        purchaseOrder.addItem(item);
+        recalculateTotals(purchaseOrder);
+
+        log.info("Thêm dòng sản phẩm thành công vào PO id={}, lineNumber={}", poId, nextLineNumber);
+        return purchaseOrderMapper.toDetailResponse(purchaseOrder);
+    }
+
+    @Override
+    @Transactional
+    public PurchaseOrderDetailResponse updateItem(UUID poId, UUID itemId, UpdatePurchaseOrderItemRequest request) {
+        log.info("Cập nhật dòng sản phẩm id={} trong đơn đặt hàng id={}", itemId, poId);
+
+        PurchaseOrder purchaseOrder = getForUpdateOrThrow(poId);
+        validateDraftForItemModification(purchaseOrder);
+
+        PurchaseOrderItem item = purchaseOrder.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy dòng sản phẩm id=" + itemId + " trong đơn đặt hàng " + poId));
+
+        item.setQuantity(request.quantity());
+        item.setUnitPrice(request.unitPrice());
+        item.setDescription(request.description());
+
+        recalculateTotals(purchaseOrder);
+
+        log.info("Cập nhật dòng sản phẩm thành công, itemId={}", itemId);
+        return purchaseOrderMapper.toDetailResponse(purchaseOrder);
+    }
+
+    @Override
+    public PurchaseOrderDetailResponse removeItem(UUID poId, UUID itemId) {
+        log.info("Xóa dòng sản phẩm id={} khỏi đơn đặt hàng id={}", itemId, poId);
+
+        PurchaseOrder purchaseOrder = getForUpdateOrThrow(poId);
+        validateDraftForItemModification(purchaseOrder);
+
+        if (purchaseOrder.getItems().size() <= 1) {
+            throw new IllegalStateException(
+                    "Không thể xóa - đơn đặt hàng phải có ít nhất 1 sản phẩm");
+        }
+
+        PurchaseOrderItem item = purchaseOrder.getItems().stream()
+                .filter(i -> i.getId().equals(itemId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy dòng sản phẩm id=" + itemId + " trong đơn đặt hàng " + poId));
+
+        purchaseOrder.removeItem(item);
+        recalculateTotals(purchaseOrder);
+
+        log.info("Xóa dòng sản phẩm thành công, itemId={}", itemId);
+        return purchaseOrderMapper.toDetailResponse(purchaseOrder);
+    }
+
+    @Override
+    @Transactional
     public PurchaseOrderDetailResponse submitForApproval(UUID id) {
+        log.info("Gửi duyệt đơn đặt hàng id={}", id);
+
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.PENDING_APPROVAL);
+
         if (purchaseOrder.getItems().isEmpty()) {
-            throw new IllegalStateException("Không thể gửi duyệt đơn hàng không có sản phảm");
+            throw new IllegalStateException("Không thể gửi duyệt đơn hàng không có sản phẩm nào");
         }
+
         purchaseOrder.setStatus(PurchaseOrderStatus.PENDING_APPROVAL);
+
+        log.info("Gửi duyệt thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
     @Override
     @Transactional
     public PurchaseOrderDetailResponse approve(UUID id, ApprovePurchaseOrderRequest request) {
+        log.info("Duyệt đơn đặt hàng id={}", id);
+
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.APPROVED);
 
         purchaseOrder.setStatus(PurchaseOrderStatus.APPROVED);
-        purchaseOrder.setApprovalDate(LocalDateTime.now());
         purchaseOrder.setApprovedById(getCurrentUser().getId());
+        purchaseOrder.setApprovalDate(LocalDateTime.now());
+
+        log.info("Duyệt đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
@@ -221,30 +303,36 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     @Transactional
     public PurchaseOrderDetailResponse reject(UUID id, RejectPurchaseOrderRequest request) {
 
+        log.info("Từ chối đơn đặt hàng id={}, lý do={}", id, request.reason());
+
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.REJECTED);
 
         purchaseOrder.setStatus(PurchaseOrderStatus.REJECTED);
-
         purchaseOrder.setRejectionReason(request.reason());
 
+        log.info("Từ chối đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
     @Override
     @Transactional
     public PurchaseOrderDetailResponse sendToSupplier(UUID id) {
+        log.info("Gửi đơn đặt hàng cho nhà cung cấp, id={}", id);
+
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.SENT_TO_SUPPLIER);
 
         purchaseOrder.setStatus(PurchaseOrderStatus.SENT_TO_SUPPLIER);
 
+        log.info("Gửi đơn đặt hàng cho NCC thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
     @Override
     @Transactional
     public PurchaseOrderDetailResponse cancel(UUID id, CancelPurchaseOrderRequest request) {
+        log.info("Hủy đơn đặt hàng id={}, lý do={}", id, request.reason());
 
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.CANCELLED);
@@ -254,31 +342,49 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setCancelledAt(LocalDateTime.now());
         purchaseOrder.setCancellationReason(request.reason());
 
+        log.info("Hủy đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
     @Override
     @Transactional
     public PurchaseOrderDetailResponse close(UUID id) {
+        log.info("Đóng đơn đặt hàng id={}", id);
 
         PurchaseOrder purchaseOrder = getForUpdateOrThrow(id);
         validateTransition(purchaseOrder.getStatus(), PurchaseOrderStatus.CLOSED);
 
         purchaseOrder.setStatus(PurchaseOrderStatus.CLOSED);
 
+        log.info("Đóng đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
+        log.info("Bắt đầu xoá (soft delete) đơn đặt hàng id={}", id);
+
         PurchaseOrder purchaseOrder = purchaseOrderRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy đơn đặt hàng"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy đơn đặt hàng với id: " + id));
 
         if (purchaseOrder.getStatus() != PurchaseOrderStatus.DRAFT) {
-            throw new IllegalStateException("Chỉ có thể xoá những đơn hàng đnag ở trạng thái nháp");
+            throw new IllegalStateException(
+                    "Chỉ có thể xoá đơn đặt hàng khi đang ở trạng thái DRAFT");
         }
+
         purchaseOrder.setIsDeleted(true);
+
+        log.info("Xoá (soft delete) đơn đặt hàng thành công, id={}", id);
+    }
+
+    private void validateDraftForItemModification(PurchaseOrder purchaseOrder) {
+        if (purchaseOrder.getStatus() != PurchaseOrderStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Chỉ có thể thêm/sửa/xóa sản phẩm khi đơn đặt hàng đang ở trạng thái DRAFT, hiện tại: "
+                            + purchaseOrder.getStatus());
+        }
     }
 
     private PurchaseOrder getForUpdateOrThrow(UUID id) {

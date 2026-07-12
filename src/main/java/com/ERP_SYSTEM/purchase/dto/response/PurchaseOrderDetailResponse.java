@@ -13,7 +13,6 @@ public record PurchaseOrderDetailResponse(
         String poNumber,
         SupplierResponse supplier,
         UUID warehouseId,
-        UUID requisitionId,
         LocalDateTime poDate,
         LocalDate deliveryDate,
         String currency,

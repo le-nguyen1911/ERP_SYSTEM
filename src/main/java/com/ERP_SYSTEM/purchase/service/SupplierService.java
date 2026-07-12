@@ -18,7 +18,7 @@ public interface SupplierService {
 
     Page<SupplierResponse> getAll(Pageable pageable);
 
-    Page<SupplierResponse> search(SupplierSearchRequest request, Pageable pageable);
+    Page<SupplierResponse> search(SupplierSearchRequest searchRequest, Pageable pageable);
 
     void delete(UUID id);
 }

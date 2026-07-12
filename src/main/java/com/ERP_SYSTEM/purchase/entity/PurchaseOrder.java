@@ -32,9 +32,6 @@ public class PurchaseOrder extends SoftDeleteBaseEntity {
     @Column(name = "warehouse_id", nullable = false)
     private UUID warehouseId;
 
-    @Column(name = "requisition_id")
-    private UUID requisitionId;
-
     @Column(name = "po_date", nullable = false)
     @Builder.Default
     private LocalDateTime poDate = LocalDateTime.now();

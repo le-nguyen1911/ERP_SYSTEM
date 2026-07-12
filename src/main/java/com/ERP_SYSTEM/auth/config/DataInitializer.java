@@ -58,6 +58,23 @@ public class DataInitializer implements CommandLineRunner {
         createPermission("STOCK_VIEW", "Xem tồn kho");
         createPermission("STOCK_UPDATE", "Cập nhật tồn kho");
 
+
+        //SUPPLIER
+        createPermission("SUPPLIER_CREATE", "Tạo nhà cung cấp");
+        createPermission("SUPPLIER_UPDATE", "Cập nhật nhà cung cấp");
+        createPermission("SUPPLIER_VIEW", "Xem nhà cung cấp");
+
+        //PURCHASE ORDER
+        createPermission("PURCHASE_CREATE", "Tạo đơn đặt hàng");
+        createPermission("PURCHASE_UPDATE", "Cập nhật đơn đặt hàng");
+        createPermission("PURCHASE_APPROVE", "Duyệt đơn đặt hàng");
+        createPermission("PURCHASE_CANCEL", "Hủy đơn đặt hàng");
+
+        //GOODS RECEIPT
+        createPermission("GOODS_RECEIPT_CREATE", "Tạo phiếu nhận hàng");
+        createPermission("GOODS_RECEIPT_VIEW", "Xem phiếu nhận hàng");
+        createPermission("GOODS_RECEIPT_IMPORT", "Nhập kho từ phiếu nhận hàng");
+
         // REPORT
 
         createPermission("REPORT_VIEW", "Xem báo cáo");
@@ -128,6 +145,19 @@ public class DataInitializer implements CommandLineRunner {
                 "STOCK_TRANSFER",
                 "STOCK_VIEW",
                 "STOCK_UPDATE",
+
+                "SUPPLIER_CREATE",
+                "SUPPLIER_UPDATE",
+                "SUPPLIER_VIEW",
+
+                "PURCHASE_CREATE",
+                "PURCHASE_UPDATE",
+                "PURCHASE_APPROVE",
+                "PURCHASE_CANCEL",
+
+                "GOODS_RECEIPT_CREATE",
+                "GOODS_RECEIPT_VIEW",
+                "GOODS_RECEIPT_IMPORT",
 
                 "REPORT_VIEW"
         ));

@@ -35,22 +35,26 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
+@Transactional(readOnly = true)
 public class GoodsReceiptServiceImpl implements GoodsReceiptService {
+
     private final GoodsReceiptRepository goodsReceiptRepository;
     private final GoodsReceiptItemRepository goodsReceiptItemRepository;
     private final PurchaseOrderRepository purchaseOrderRepository;
     private final PurchaseOrderItemRepository purchaseOrderItemRepository;
-    private final GoodsReceiptMapper goodsReceiptMapper;
-    private final StockService stockService;
     private final SequenceRepository sequenceRepository;
+    private final GoodsReceiptMapper goodsReceiptMapper;
     private final UserRepository userRepository;
+    private final StockService stockService;
+
 
     @Override
     @Transactional
     public GoodsReceiptDetailResponse create(CreateGoodsReceiptRequest request) {
+        log.info("Bắt đầu tạo phiếu nhận hàng cho PO id={}", request.purchaseOrderId());
 
         PurchaseOrder purchaseOrder = purchaseOrderRepository
                 .findByIdAndIsDeletedFalse(request.purchaseOrderId())
@@ -117,76 +121,98 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         }
 
         GoodsReceipt saved = goodsReceiptRepository.save(goodsReceipt);
-
+        log.info("Tạo phiếu nhận hàng thành công, id={}, grNumber={}",
+                saved.getId(), saved.getGrNumber());
 
         return goodsReceiptMapper.toDetailResponse(saved);
     }
 
+    private String generateGrNumber() {
+        String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        Long sequenceValue = sequenceRepository.nextGrNumberSequence();
+        return "GR-" + datePart + "-" + String.format("%06d", sequenceValue);
+    }
+
     @Override
-    @Transactional(readOnly = true)
     public GoodsReceiptDetailResponse getById(UUID id) {
         GoodsReceipt goodsReceipt = goodsReceiptRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phiếu nập hàng"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy phiếu nhận hàng với id: " + id));
         return goodsReceiptMapper.toDetailResponse(goodsReceipt);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<GoodsReceiptSummaryResponse> getAll(Pageable pageable) {
         return goodsReceiptRepository.findByIsDeletedFalse(pageable)
                 .map(goodsReceiptMapper::toSummaryResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<GoodsReceiptSummaryResponse> getByPurchaseOrder(UUID purchaseOrderId, Pageable pageable) {
         return goodsReceiptRepository.findByPurchaseOrderIdAndIsDeletedFalse(purchaseOrderId, pageable)
                 .map(goodsReceiptMapper::toSummaryResponse);
     }
 
+
     @Override
     @Transactional
     public GoodsReceiptDetailResponse markAsReceived(UUID id) {
+        log.info("Xác nhận đã nhận hàng, phiếu id={}", id);
+
         GoodsReceipt goodsReceipt = getForUpdateOrThrow(id);
+
         if (goodsReceipt.getStatus() != GoodsReceiptStatus.DRAFT) {
             throw new IllegalStateException(
                     "Chỉ có thể xác nhận nhận hàng khi phiếu đang ở trạng thái DRAFT");
         }
+
         goodsReceipt.setStatus(GoodsReceiptStatus.RECEIVED);
+
+        log.info("Xác nhận nhận hàng thành công, id={}", id);
         return goodsReceiptMapper.toDetailResponse(goodsReceipt);
     }
+
 
     @Override
     @Transactional
     public GoodsReceiptDetailResponse performQualityCheck(UUID id, QualityCheckRequest request) {
+        log.info("Thực hiện QC cho phiếu nhận hàng id={}, kết quả={}", id, request.result());
+
         if (request.result() == QualityCheckStatus.PENDING) {
             throw new IllegalArgumentException(
                     "Kết quả kiểm tra chất lượng phải là PASSED hoặc FAILED, không thể là PENDING");
         }
+
         GoodsReceipt goodsReceipt = getForUpdateOrThrow(id);
+
         if (goodsReceipt.getStatus() != GoodsReceiptStatus.RECEIVED) {
             throw new IllegalStateException(
                     "Chỉ có thể thực hiện QC khi phiếu đang ở trạng thái RECEIVED, hiện tại: "
                             + goodsReceipt.getStatus());
         }
+
         goodsReceipt.setQualityCheckStatus(request.result());
         goodsReceipt.setQualityCheckNotes(request.notes());
         goodsReceipt.setQualityCheckedById(getCurrentUser().getId());
         goodsReceipt.setQualityCheckDate(LocalDateTime.now());
+
         if (request.result() == QualityCheckStatus.FAILED) {
             goodsReceipt.setStatus(GoodsReceiptStatus.QC_FAILED);
+            log.info("QC thất bại cho phiếu id={}, không nhập kho", id);
             return goodsReceiptMapper.toDetailResponse(goodsReceipt);
         }
 
         goodsReceipt.setStatus(GoodsReceiptStatus.QC_PASSED);
         importToInventory(goodsReceipt);
+
+        log.info("QC hoàn tất cho phiếu id={}, trạng thái cuối={}", id, goodsReceipt.getStatus());
         return goodsReceiptMapper.toDetailResponse(goodsReceipt);
     }
+
 
     private void importToInventory(GoodsReceipt goodsReceipt) {
         try {
             for (GoodsReceiptItem item : goodsReceipt.getItems()) {
-
                 String note = buildStockTransactionNote(item);
 
                 StockTransactionRequest stockRequest = new StockTransactionRequest(
@@ -198,7 +224,6 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
                         note
                 );
 
-
                 stockService.processTransaction(stockRequest);
             }
 
@@ -206,9 +231,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             goodsReceipt.setInventoryErrorMessage(null);
             goodsReceipt.setStatus(GoodsReceiptStatus.IMPORTED);
 
-
             updatePurchaseOrderItemsReceivedQuantity(goodsReceipt);
-
             checkAndUpdatePurchaseOrderStatus(goodsReceipt.getPurchaseOrder());
 
             log.info("Import tồn kho thành công cho phiếu nhận hàng id={}", goodsReceipt.getId());
@@ -290,7 +313,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     }
 
     @Override
-    @Scheduled(fixedDelay = 900_000) // 15 phút = 900,000 ms
+    @Scheduled(fixedDelay = 900_000)
     @Transactional
     public void retryAllFailedInventoryImports() {
         List<GoodsReceipt> failedReceipts =
@@ -307,12 +330,12 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             try {
                 importToInventory(goodsReceipt);
             } catch (Exception ex) {
-
                 log.error("Lỗi khi retry phiếu nhận hàng id={} trong Scheduled Job: {}",
                         goodsReceipt.getId(), ex.getMessage(), ex);
             }
         }
     }
+
 
     @Override
     @Transactional
@@ -320,6 +343,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         log.info("Hủy phiếu nhận hàng id={}, lý do={}", id, reason);
 
         GoodsReceipt goodsReceipt = getForUpdateOrThrow(id);
+
         if (goodsReceipt.getStatus() == GoodsReceiptStatus.IMPORTED) {
             throw new IllegalStateException(
                     "Không thể hủy phiếu nhận hàng đã nhập kho thành công");
@@ -331,16 +355,11 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         log.info("Hủy phiếu nhận hàng thành công, id={}", id);
     }
 
+  
     private GoodsReceipt getForUpdateOrThrow(UUID id) {
         return goodsReceiptRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phiếu nhận hàng với id: " + id));
-    }
-
-    private String generateGrNumber() {
-        String datePart = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        Long sequenceValue = sequenceRepository.nextGrNumberSequence();
-        return "GR-" + datePart + "-" + String.format("%06d", sequenceValue);
     }
 
     private User getCurrentUser() {
@@ -353,8 +372,6 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         String username = authentication.getName();
 
         return userRepository.findByUsername(username)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Không tìm thấy người dùng: " + username));
+                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng: " + username));
     }
 }
