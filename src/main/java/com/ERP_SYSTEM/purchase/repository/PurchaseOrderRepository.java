@@ -11,7 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -33,7 +33,7 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
     Page<PurchaseOrder> findBySupplierIdAndIsDeletedFalse(UUID supplierId, Pageable pageable);
 
     Page<PurchaseOrder> findByStatusAndIsDeletedFalse(PurchaseOrderStatus status, Pageable pageable);
-    
+
     Page<PurchaseOrder> findBySupplierIdAndStatusAndIsDeletedFalse(
             UUID supplierId, PurchaseOrderStatus status, Pageable pageable);
 
@@ -42,13 +42,13 @@ public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, UU
             WHERE po.isDeleted = false
             AND (:supplierId IS NULL OR po.supplier.id = :supplierId)
             AND (:status IS NULL OR po.status = :status)
-            AND (:fromDate IS NULL OR po.poDate >= :fromDate)
-            AND (:toDate IS NULL OR po.poDate <= :toDate)
+            AND (cast(:fromDate as timestamp) IS NULL OR po.poDate >= :fromDate)
+            AND (cast(:toDate as timestamp) IS NULL OR po.poDate <= :toDate)
             """)
     Page<PurchaseOrder> searchPurchaseOrders(
             @Param("supplierId") UUID supplierId,
             @Param("status") PurchaseOrderStatus status,
-            @Param("fromDate") LocalDate fromDate,
-            @Param("toDate") LocalDate toDate,
+            @Param("fromDate") LocalDateTime fromDate,
+            @Param("toDate") LocalDateTime toDate,
             Pageable pageable);
 }

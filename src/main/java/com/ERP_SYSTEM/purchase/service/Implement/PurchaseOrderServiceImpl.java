@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -182,14 +183,22 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PurchaseOrderSummaryResponse> search(PurchaseOrderSearchRequest request, Pageable pageable) {
+    public Page<PurchaseOrderSummaryResponse> search(
+            PurchaseOrderSearchRequest searchRequest, Pageable pageable) {
+
+        LocalDateTime fromDateTime = searchRequest.fromDate() != null
+                ? searchRequest.fromDate().atStartOfDay()
+                : null;
+        LocalDateTime toDateTime = searchRequest.toDate() != null
+                ? searchRequest.toDate().atTime(LocalTime.MAX)
+                : null;
+
         return purchaseOrderRepository.searchPurchaseOrders(
-                        request.supplierId(),
-                        request.status(),
-                        request.fromDate(),
-                        request.toDate(),
-                        pageable
-                )
+                        searchRequest.supplierId(),
+                        searchRequest.status(),
+                        fromDateTime,
+                        toDateTime,
+                        pageable)
                 .map(purchaseOrderMapper::toSummaryResponse);
     }
 
