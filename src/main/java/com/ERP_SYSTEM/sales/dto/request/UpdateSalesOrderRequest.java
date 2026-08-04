@@ -1,26 +1,15 @@
 package com.ERP_SYSTEM.sales.dto.request;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.List;
-import java.util.UUID;
 
-public record CreateSalesOrderRequest(
-        UUID customerId,
-
-        @NotNull(message = "Kho xuất hàng không được để trống")
-        UUID warehouseId,
+public record UpdateSalesOrderRequest(
 
         @NotNull(message = "Ngày giao hàng không được để trống")
         @Future(message = "Ngày giao hàng phải sau ngày hiện tại")
         LocalDate deliveryDate,
-
-        @NotBlank(message = "Đơn vị tiền tệ không được để trống")
-        @Size(min = 3, max = 3)
-        String currency,
 
         @DecimalMin(value = "0.0", message = "Thuế suất không được âm")
         @DecimalMax(value = "100.0", message = "Thuế suất không được vượt quá 100%")
@@ -37,10 +26,6 @@ public record CreateSalesOrderRequest(
 
         String shippingAddress,
 
-        String notes,
-
-        @NotEmpty(message = "Đơn hàng phải có ít nhất 1 sản phẩm")
-        @Valid
-        List<SalesOrderItemRequest> items
+        String notes
 ) {
 }
