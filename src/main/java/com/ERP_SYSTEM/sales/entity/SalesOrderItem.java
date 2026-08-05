@@ -4,6 +4,7 @@ import com.ERP_SYSTEM.common.base.SoftDeleteBaseEntity;
 import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderItemStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -14,7 +15,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class SalesOrderItem extends SoftDeleteBaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sales_order_id", nullable = false)

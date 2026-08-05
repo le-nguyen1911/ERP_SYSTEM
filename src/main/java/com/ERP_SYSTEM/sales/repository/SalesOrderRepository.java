@@ -2,11 +2,9 @@ package com.ERP_SYSTEM.sales.repository;
 
 import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderStatus;
 import com.ERP_SYSTEM.sales.entity.SalesOrder;
-import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -19,13 +17,9 @@ import java.util.UUID;
 public interface SalesOrderRepository extends JpaRepository<SalesOrder, UUID> {
     Optional<SalesOrder> findByIdAndIsDeletedFalse(UUID id);
 
-    Optional<SalesOrder> findBySoNumberAndIsDeletedFalse(String number);
+    Optional<SalesOrder> findBySoNumberAndIsDeletedFalse(String soNumber);
 
-    boolean existsBySoNumberAndIsDeletedFalse(String number);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    @Query("SELECT so FROM SalesOrder so WHERE so.id = :id AND so.isDeleted = false")
-    Optional<SalesOrder> findByIdForUpdate(@Param("id") UUID id);
+    boolean existsBySoNumberAndIsDeletedFalse(String soNumber);
 
     Page<SalesOrder> findByIsDeletedFalse(Pageable pageable);
 

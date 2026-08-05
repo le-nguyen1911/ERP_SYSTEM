@@ -4,6 +4,7 @@ import com.ERP_SYSTEM.common.base.SoftDeleteBaseEntity;
 import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -18,7 +19,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class SalesOrder extends SoftDeleteBaseEntity {
 
     @Column(name = "so_number", nullable = false, unique = true, length = 50)

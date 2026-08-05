@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.validation.FieldError;
@@ -123,5 +124,16 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailure(
+            org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+
+        log.warn("Xung đột cập nhật đồng thời (Optimistic Lock): {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT) // 409
+                .body(ApiResponse.error(
+                        "Đơn hàng vừa được cập nhật bởi người khác, vui lòng tải lại trang."));
+    }
 
 }

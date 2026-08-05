@@ -3,8 +3,11 @@ package com.ERP_SYSTEM.common.base;
 
 import com.ERP_SYSTEM.common.uuid.UuidV7Generator;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
@@ -15,8 +18,11 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@MappedSuperclass// đây là entity cha để các entity con kế thừa các field chuing
+@MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
 public abstract class BaseEntity {
 
     @Id
