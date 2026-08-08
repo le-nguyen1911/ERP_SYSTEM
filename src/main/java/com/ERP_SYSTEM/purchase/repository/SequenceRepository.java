@@ -23,5 +23,12 @@ public class SequenceRepository {
                 .getSingleResult())
                 .longValue();
     }
-    
+
+    public Long nextSoNumberSequence() {
+        return ((Number) entityManager
+                .createNativeQuery("SELECT nextval('seq_so_number')")
+                .getSingleResult())
+                .longValue();
+    }
+
 }

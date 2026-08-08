@@ -19,11 +19,11 @@ public interface SalesOrderService {
 
     Page<SalesOrderSummaryResponse> search(SalesOrderSearchRequest request, Pageable pageable);
 
-    SalesOrderDetailResponse addItem(UUID id, AddSalesOrderItemRequest request);
+    SalesOrderDetailResponse addItem(UUID soId, AddSalesOrderItemRequest request);
 
-    SalesOrderDetailResponse updateItem(UUID id, UpdateSalesOrderItemRequest request);
+    SalesOrderDetailResponse updateItem(UUID soId, UUID itemId, UpdateSalesOrderItemRequest request);
 
-    SalesOrderDetailResponse removeItem(UUID id, UUID ItemId);
+    SalesOrderDetailResponse removeItem(UUID soId, UUID itemId);
 
     SalesOrderDetailResponse submitForApproval(UUID id);
 
