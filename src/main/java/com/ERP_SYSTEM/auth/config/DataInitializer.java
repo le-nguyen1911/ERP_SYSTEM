@@ -84,6 +84,7 @@ public class DataInitializer implements CommandLineRunner {
         createPermission("SALES_CREATE", "Tạo đơn bán hàng");
         createPermission("SALES_UPDATE", "Cập nhật đơn bán hàng");
         createPermission("SALES_APPROVE", "Duyệt đơn bán hàng");
+        createPermission("SALES_VIEW", "Xem chi tiết đơn bán hàng");
         createPermission("SALES_CANCEL", "Hủy đơn bán hàng");
 
         // DELIVERY
@@ -181,6 +182,7 @@ public class DataInitializer implements CommandLineRunner {
 
                 "SALES_CREATE",
                 "SALES_UPDATE",
+                "SALES_VIEW",
                 "SALES_APPROVE",
                 "SALES_CANCEL",
 
