@@ -31,4 +31,11 @@ public class SequenceRepository {
                 .longValue();
     }
 
+    public Long nextDeliveryNumberSequence() {
+        return ((Number) entityManager
+                .createNativeQuery("SELECT nextval('seq_delivery_number')")
+                .getSingleResult())
+                .longValue();
+    }
+
 }

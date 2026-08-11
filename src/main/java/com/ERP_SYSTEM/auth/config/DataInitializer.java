@@ -75,9 +75,25 @@ public class DataInitializer implements CommandLineRunner {
         createPermission("GOODS_RECEIPT_VIEW", "Xem phiếu nhận hàng");
         createPermission("GOODS_RECEIPT_IMPORT", "Nhập kho từ phiếu nhận hàng");
 
-        // REPORT
+        // CUSTOMER
+        createPermission("CUSTOMER_CREATE", "Tạo khách hàng");
+        createPermission("CUSTOMER_UPDATE", "Cập nhật khách hàng");
+        createPermission("CUSTOMER_VIEW", "Xem khách hàng");
 
+        // SALES ORDER
+        createPermission("SALES_CREATE", "Tạo đơn bán hàng");
+        createPermission("SALES_UPDATE", "Cập nhật đơn bán hàng");
+        createPermission("SALES_APPROVE", "Duyệt đơn bán hàng");
+        createPermission("SALES_CANCEL", "Hủy đơn bán hàng");
+
+        // DELIVERY
+        createPermission("DELIVERY_CREATE", "Tạo phiếu giao hàng");
+        createPermission("DELIVERY_VIEW", "Xem phiếu giao hàng");
+        createPermission("DELIVERY_EXPORT", "Xuất kho từ phiếu giao hàng");
+
+        // REPORT
         createPermission("REPORT_VIEW", "Xem báo cáo");
+
 
         // ROLE USER
         createRole("USER", Set.of(
@@ -158,6 +174,19 @@ public class DataInitializer implements CommandLineRunner {
                 "GOODS_RECEIPT_CREATE",
                 "GOODS_RECEIPT_VIEW",
                 "GOODS_RECEIPT_IMPORT",
+
+                "CUSTOMER_CREATE",
+                "CUSTOMER_UPDATE",
+                "CUSTOMER_VIEW",
+
+                "SALES_CREATE",
+                "SALES_UPDATE",
+                "SALES_APPROVE",
+                "SALES_CANCEL",
+
+                "DELIVERY_CREATE",
+                "DELIVERY_VIEW",
+                "DELIVERY_EXPORT",
 
                 "REPORT_VIEW"
         ));

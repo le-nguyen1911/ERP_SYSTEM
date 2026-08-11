@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Getter
 @Builder
-@JsonInclude(JsonInclude.Include.NON_NULL)//field nào null ko trả về json
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ApiResponse<T> {
     private boolean success;
     private String message;

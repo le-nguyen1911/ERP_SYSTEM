@@ -16,10 +16,12 @@ public interface DeliveryService {
     Page<DeliverySummaryResponse> getAll(Pageable pageable);
 
     Page<DeliverySummaryResponse> getBySalesOrder(UUID salesOrderId, Pageable pageable);
-    
+
     DeliveryDetailResponse retryInventoryExport(UUID id);
 
     void retryAllFailedInventoryExports();
+
+    DeliveryDetailResponse markAsDelivered(UUID id);
 
     void cancel(UUID id, String reason);
 }
