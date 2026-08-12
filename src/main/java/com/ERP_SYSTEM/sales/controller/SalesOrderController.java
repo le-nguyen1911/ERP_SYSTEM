@@ -70,9 +70,9 @@ public class SalesOrderController {
 
     @PostMapping("/{id}/items")
     @PreAuthorize("hasAuthority('SALES_UPDATE')")
-    public ResponseEntity<ApiResponse<SalesOrderDetailResponse>> addItems(@PathVariable UUID soId, @Valid @RequestBody AddSalesOrderItemRequest request) {
-        SalesOrderDetailResponse response = salesOrderService.addItem(soId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Thêm sản phẩm ào đơn hàng thành công", response));
+    public ResponseEntity<ApiResponse<SalesOrderDetailResponse>> addItems(@PathVariable UUID id, @Valid @RequestBody AddSalesOrderItemRequest request) {
+        SalesOrderDetailResponse response = salesOrderService.addItem(id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Thêm sản phẩm vào đơn hàng thành công", response));
     }
 
     @PutMapping("/{id}/items/{itemId}")

@@ -30,7 +30,7 @@ public class DeliveryController {
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("Tạo phiếu giao hàng thành công", response));
     }
 
-    @GetMapping("/id")
+    @GetMapping("/{id}")
     @PreAuthorize("hasAuthority('DELIVERY_VIEW')")
     public ResponseEntity<ApiResponse<DeliveryDetailResponse>> findById(@PathVariable UUID id) {
         DeliveryDetailResponse response = deliveryService.getById(id);
@@ -52,6 +52,15 @@ public class DeliveryController {
         return ResponseEntity.ok(ApiResponse.success("Thử lại xuất kho thành công", response));
     }
 
+    @GetMapping("/by-sales-order/{salesOrderId}")
+    @PreAuthorize("hasAuthority('DELIVERY_VIEW')")
+    public ResponseEntity<ApiResponse<Page<DeliverySummaryResponse>>> getBySalesOrder(
+            @PathVariable UUID salesOrderId, Pageable pageable) {
+        Page<DeliverySummaryResponse> response =
+                deliveryService.getBySalesOrder(salesOrderId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping("/{id}/mark-as-delivered")
     @PreAuthorize("hasAuthority('DELIVERY_CREATE')")
     public ResponseEntity<ApiResponse<DeliveryDetailResponse>> markAsDelivered(
@@ -59,7 +68,7 @@ public class DeliveryController {
         DeliveryDetailResponse response = deliveryService.markAsDelivered(id);
         return ResponseEntity.ok(ApiResponse.success("Xác nhận đã giao hàng thành công", response));
     }
-    
+
     @PostMapping("/{id}/cancel")
     @PreAuthorize("hasAuthority('DELIVERY_CREATE')")
     public ResponseEntity<ApiResponse<Void>> cancel(

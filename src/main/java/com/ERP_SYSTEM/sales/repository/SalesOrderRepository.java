@@ -35,13 +35,14 @@ public interface SalesOrderRepository extends JpaRepository<SalesOrder, UUID> {
             WHERE so.isDeleted = false
             AND (:customerId IS NULL OR so.customer.id = :customerId)
             AND (:status IS NULL OR so.status = :status)
-            AND (:fromDate IS NULL OR so.soDate >= :fromDate)
-            AND (:toDate IS NULL OR so.soDate <= :toDate)
+            AND (so.soDate >= COALESCE(:fromDate, so.soDate))
+            AND (so.soDate <= COALESCE(:toDate, so.soDate))
             """)
     Page<SalesOrder> searchSalesOrders(
             @Param("customerId") UUID customerId,
             @Param("status") SalesOrderStatus status,
             @Param("fromDate") LocalDateTime fromDate,
             @Param("toDate") LocalDateTime toDate,
-            Pageable pageable);
+            Pageable pageable
+    );
 }

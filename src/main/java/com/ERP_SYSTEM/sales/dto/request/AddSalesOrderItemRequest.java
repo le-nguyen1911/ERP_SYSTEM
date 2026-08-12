@@ -19,14 +19,14 @@ public record AddSalesOrderItemRequest(
 
         @NotBlank(message = "đơn vị tính không được bỏ trống")
         @Size(max = 255, message = "Tối đa 50 ký tự")
-        String ProductUnit,
+        String productUnit,
 
-        @NotBlank(message = "Số lượng không được để trống")
+        @NotNull(message = "Số lượng không được để trống")
         @DecimalMin(value = "0.0001", message = "Số lượng phải lớn hơn 0")
         @Digits(integer = 15, fraction = 4)
         BigDecimal quantity,
 
-        @NotBlank(message = "Giá không được để trống")
+        @NotNull(message = "Giá không được để trống")
         @DecimalMin(value = "0.0001", message = "Giá phải lớn hơn 0")
         @Digits(integer = 15, fraction = 4)
         BigDecimal unitPrice,

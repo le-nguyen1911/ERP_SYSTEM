@@ -116,7 +116,7 @@ public class DeliveryServiceImpl implements DeliveryService {
                     stockService.getStockByProduct(soItem.getProductId());
 
             ProductStockResponse stockAtThisWarehouse = stocksOfProduct.stream()
-                    .filter(s -> s.warehouse().equals(salesOrder.getWarehouseId()))
+                    .filter(s -> s.warehouse().id().equals(salesOrder.getWarehouseId()))
                     .findFirst()
                     .orElseThrow(() -> new IllegalStateException(
                             "Sản phẩm " + soItem.getProductName()
@@ -193,7 +193,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             delivery.setInventoryErrorMessage(
                     ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
             delivery.setLastInventoryRetryAt(LocalDateTime.now());
-            // status GIỮ NGUYÊN DRAFT - không tự ý nhảy sang EXPORTED.
+
         }
     }
 
