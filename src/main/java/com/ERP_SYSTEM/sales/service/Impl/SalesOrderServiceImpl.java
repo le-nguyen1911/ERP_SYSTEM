@@ -79,6 +79,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
 
         SalesOrder salesOrder = SalesOrder.builder()
                 .soNumber(generateSoNumber())
+                .createdById(getCurrentUser().getId())
                 .customer(customer)
                 .warehouseId(request.warehouseId())
                 .soDate(LocalDateTime.now())

@@ -11,6 +11,7 @@ import java.util.UUID;
 public record SalesOrderDetailResponse(
         UUID id,
         String soNumber,
+        UUID createdById,
         CustomerResponse customer,
         UUID warehouseId,
         LocalDateTime soDate,

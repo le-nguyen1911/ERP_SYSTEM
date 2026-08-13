@@ -25,6 +25,9 @@ public class SalesOrder extends SoftDeleteBaseEntity {
     @Column(name = "so_number", nullable = false, unique = true, length = 50)
     private String soNumber;
 
+    @Column(name = "created_by_id")
+    private UUID createdById;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;

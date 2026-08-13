@@ -11,6 +11,7 @@ import java.util.UUID;
 public record PurchaseOrderDetailResponse(
         UUID id,
         String poNumber,
+        UUID createdById,
         SupplierResponse supplier,
         UUID warehouseId,
         LocalDateTime poDate,

@@ -79,6 +79,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         PurchaseOrder purchaseOrder = PurchaseOrder.builder()
                 .poNumber(generatePoNumber())
+                .createdById(getCurrentUser().getId())
                 .supplier(supplier)
                 .warehouseId(request.warehouseId())
                 .poDate(LocalDateTime.now())
