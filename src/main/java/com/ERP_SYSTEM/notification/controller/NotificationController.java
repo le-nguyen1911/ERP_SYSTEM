@@ -3,12 +3,15 @@ package com.ERP_SYSTEM.notification.controller;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.common.response.ApiResponse;
+import com.ERP_SYSTEM.notification.dto.request.CreateNotificationRequest;
 import com.ERP_SYSTEM.notification.dto.response.NotificationResponse;
 import com.ERP_SYSTEM.notification.dto.response.UnreadCountResponse;
 import com.ERP_SYSTEM.notification.service.NotificationService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,11 +27,12 @@ public class NotificationController {
     private final UserRepository userRepository;
 
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(Pageable pageable) {
-        UUID userId = getCurrentUser().getId();
-        Page<NotificationResponse> notifications = notificationService.getMyNotifications(userId, pageable);
-        return ResponseEntity.ok(ApiResponse.success(notifications));
+    @PostMapping
+    public ResponseEntity<ApiResponse<NotificationResponse>> create(
+            @Valid @RequestBody CreateNotificationRequest request) {
+        NotificationResponse response = notificationService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("Tạo thông báo thành công", response));
     }
 
     @GetMapping("/unread")

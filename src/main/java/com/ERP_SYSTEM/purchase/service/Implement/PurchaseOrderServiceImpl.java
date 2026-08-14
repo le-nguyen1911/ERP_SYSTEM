@@ -11,6 +11,8 @@ import com.ERP_SYSTEM.purchase.entity.PurchaseOrderItem;
 import com.ERP_SYSTEM.purchase.entity.Supplier;
 import com.ERP_SYSTEM.purchase.enums.PurchaseOrderStatus;
 import com.ERP_SYSTEM.purchase.enums.SupplierStatus;
+import com.ERP_SYSTEM.purchase.event.PurchaseOrderApprovedEvent;
+import com.ERP_SYSTEM.purchase.event.PurchaseOrderRejectedEvent;
 import com.ERP_SYSTEM.purchase.mapper.PurchaseOrderMapper;
 import com.ERP_SYSTEM.purchase.repository.PurchaseOrderRepository;
 import com.ERP_SYSTEM.purchase.repository.SequenceRepository;
@@ -18,6 +20,7 @@ import com.ERP_SYSTEM.purchase.repository.SupplierRepository;
 import com.ERP_SYSTEM.purchase.service.PurchaseOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -41,7 +44,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
     private final PurchaseOrderMapper purchaseOrderMapper;
     private final UserRepository userRepository;
     private final SequenceRepository sequenceRepository;
-
+    private final ApplicationEventPublisher eventPublisher;
 
     private static final Map<PurchaseOrderStatus, Set<PurchaseOrderStatus>> VALID_TRANSITIONS =
             new EnumMap<>(PurchaseOrderStatus.class);
@@ -305,6 +308,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         purchaseOrder.setApprovedById(getCurrentUser().getId());
         purchaseOrder.setApprovalDate(LocalDateTime.now());
 
+        eventPublisher.publishEvent(new PurchaseOrderApprovedEvent(
+                purchaseOrder.getId(),
+                purchaseOrder.getPoNumber(),
+                purchaseOrder.getCreatedById(),
+                purchaseOrder.getApprovedById()
+        ));
+
         log.info("Duyệt đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
@@ -320,7 +330,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
 
         purchaseOrder.setStatus(PurchaseOrderStatus.REJECTED);
         purchaseOrder.setRejectionReason(request.reason());
+        eventPublisher.publishEvent(new PurchaseOrderRejectedEvent(
+                purchaseOrder.getId(),
+                purchaseOrder.getPoNumber(),
+                purchaseOrder.getCreatedById(),
+                request.reason()
 
+        ));
         log.info("Từ chối đơn đặt hàng thành công, id={}", id);
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }

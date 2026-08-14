@@ -12,12 +12,15 @@ import com.ERP_SYSTEM.sales.entity.Enum.CustomerStatus;
 import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderStatus;
 import com.ERP_SYSTEM.sales.entity.SalesOrder;
 import com.ERP_SYSTEM.sales.entity.SalesOrderItem;
+import com.ERP_SYSTEM.sales.event.SalesOrderApprovedEvent;
+import com.ERP_SYSTEM.sales.event.SalesOrderRejectedEvent;
 import com.ERP_SYSTEM.sales.mapper.SalesOrderMapper;
 import com.ERP_SYSTEM.sales.repository.CustomerRepository;
 import com.ERP_SYSTEM.sales.repository.SalesOrderRepository;
 import com.ERP_SYSTEM.sales.service.SalesOrderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
@@ -41,7 +44,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
     private final SalesOrderMapper salesOrderMapper;
     private final SequenceRepository sequenceRepository;
     private final UserRepository userRepository;
-
+    private final ApplicationEventPublisher eventPublisher;
     private static final Map<SalesOrderStatus, Set<SalesOrderStatus>> VALID_TRANSITIONS =
             new EnumMap<>(SalesOrderStatus.class);
 
@@ -239,6 +242,14 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         salesOrder.setStatus(SalesOrderStatus.APPROVED);
         salesOrder.setApprovedById(getCurrentUser().getId());
         salesOrder.setApprovalDate(LocalDateTime.now());
+
+        eventPublisher.publishEvent(new SalesOrderApprovedEvent(
+                salesOrder.getId(),
+                salesOrder.getSoNumber(),
+                salesOrder.getCreatedById(),
+                salesOrder.getApprovedById()
+        ));
+
         log.info("Phê duyệt đơn bán hàng thành công, id={}", id);
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
@@ -251,6 +262,14 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         validateTransition(salesOrder.getStatus(), SalesOrderStatus.REJECTED);
         salesOrder.setStatus(SalesOrderStatus.REJECTED);
         salesOrder.setRejectionReason(request.reason());
+
+        eventPublisher.publishEvent(new SalesOrderRejectedEvent(
+                salesOrder.getId(),
+                salesOrder.getSoNumber(),
+                salesOrder.getCreatedById(),
+                request.reason()
+        ));
+
         log.info("Đơn bán hàng đã bị từ chối , id={}", id);
         return salesOrderMapper.toDetailResponse(salesOrder);
     }

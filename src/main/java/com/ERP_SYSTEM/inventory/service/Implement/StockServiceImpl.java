@@ -10,6 +10,7 @@ import com.ERP_SYSTEM.inventory.entity.ProductStock;
 import com.ERP_SYSTEM.inventory.entity.StockTransaction;
 import com.ERP_SYSTEM.inventory.entity.StockTransaction.TransactionType;
 import com.ERP_SYSTEM.inventory.entity.Warehouse;
+import com.ERP_SYSTEM.inventory.event.LowStockDetectedEvent;
 import com.ERP_SYSTEM.inventory.mapper.StockMapper;
 import com.ERP_SYSTEM.inventory.repository.ProductRepository;
 import com.ERP_SYSTEM.inventory.repository.ProductStockRepository;
@@ -17,6 +18,7 @@ import com.ERP_SYSTEM.inventory.repository.StockTransactionRepository;
 import com.ERP_SYSTEM.inventory.repository.WarehouseRepository;
 import com.ERP_SYSTEM.inventory.service.StockService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,6 +42,7 @@ public class StockServiceImpl implements StockService {
     private final ProductRepository productRepository;
     private final WarehouseRepository warehouseRepository;
     private final StockMapper stockMapper;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Retryable(retryFor = OptimisticLockingFailureException.class,
@@ -103,7 +106,15 @@ public class StockServiceImpl implements StockService {
                 .createdBy(currentUser)
                 .build();
         stockTransactionRepository.save(transaction);
-
+        if (stock.getQuantity().compareTo(stock.getMinQuantity()) < 0) {
+            eventPublisher.publishEvent(new LowStockDetectedEvent(
+                    stock.getProduct().getId(),
+                    stock.getProduct().getName(),
+                    stock.getWarehouse().getId(),
+                    stock.getQuantity(),
+                    stock.getMinQuantity()
+            ));
+        }
         return stockMapper.toStockTransactionResponse(transaction);
     }
 

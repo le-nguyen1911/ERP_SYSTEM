@@ -20,6 +20,7 @@ import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderItemStatus;
 import com.ERP_SYSTEM.sales.entity.Enum.SalesOrderStatus;
 import com.ERP_SYSTEM.sales.entity.SalesOrder;
 import com.ERP_SYSTEM.sales.entity.SalesOrderItem;
+import com.ERP_SYSTEM.sales.event.DeliveryExportFailedEvent;
 import com.ERP_SYSTEM.sales.mapper.DeliveryMapper;
 import com.ERP_SYSTEM.sales.repository.DeliveryItemRepository;
 import com.ERP_SYSTEM.sales.repository.DeliveryRepository;
@@ -28,6 +29,7 @@ import com.ERP_SYSTEM.sales.repository.SalesOrderRepository;
 import com.ERP_SYSTEM.sales.service.DeliveryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -55,6 +57,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final DeliveryMapper deliveryMapper;
     private final StockService stockService;
     private final UserRepository userRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -193,6 +196,13 @@ public class DeliveryServiceImpl implements DeliveryService {
             delivery.setInventoryErrorMessage(
                     ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
             delivery.setLastInventoryRetryAt(LocalDateTime.now());
+
+            eventPublisher.publishEvent(new DeliveryExportFailedEvent(
+                    delivery.getId(),
+                    delivery.getDeliveryNumber(),
+                    delivery.getDeliveredById(),
+                    delivery.getInventoryErrorMessage()
+            ));
 
         }
     }

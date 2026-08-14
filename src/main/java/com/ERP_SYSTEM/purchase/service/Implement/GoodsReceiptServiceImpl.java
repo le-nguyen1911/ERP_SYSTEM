@@ -16,11 +16,13 @@ import com.ERP_SYSTEM.purchase.entity.GoodsReceiptItem;
 import com.ERP_SYSTEM.purchase.entity.PurchaseOrder;
 import com.ERP_SYSTEM.purchase.entity.PurchaseOrderItem;
 import com.ERP_SYSTEM.purchase.enums.*;
+import com.ERP_SYSTEM.purchase.event.GoodsReceiptImportFailedEvent;
 import com.ERP_SYSTEM.purchase.mapper.GoodsReceiptMapper;
 import com.ERP_SYSTEM.purchase.repository.*;
 import com.ERP_SYSTEM.purchase.service.GoodsReceiptService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -49,7 +51,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     private final GoodsReceiptMapper goodsReceiptMapper;
     private final UserRepository userRepository;
     private final StockService stockService;
-
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional
@@ -244,6 +246,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             goodsReceipt.setInventoryErrorMessage(
                     ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName());
             goodsReceipt.setLastInventoryRetryAt(LocalDateTime.now());
+
+            eventPublisher.publishEvent(new GoodsReceiptImportFailedEvent(
+                    goodsReceipt.getId(),
+                    goodsReceipt.getGrNumber(),
+                    goodsReceipt.getReceivedById(),
+                    goodsReceipt.getInventoryErrorMessage()
+            ));
         }
     }
 
@@ -355,7 +364,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         log.info("Hủy phiếu nhận hàng thành công, id={}", id);
     }
 
-  
+
     private GoodsReceipt getForUpdateOrThrow(UUID id) {
         return goodsReceiptRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
