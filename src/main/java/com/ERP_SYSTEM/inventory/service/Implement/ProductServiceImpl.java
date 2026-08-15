@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.inventory.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateProductRequest;
 import com.ERP_SYSTEM.inventory.dto.request.UpdateProductRequest;
@@ -12,6 +14,7 @@ import com.ERP_SYSTEM.inventory.repository.CategoryRepository;
 import com.ERP_SYSTEM.inventory.repository.ProductRepository;
 import com.ERP_SYSTEM.inventory.repository.UnitRepository;
 import com.ERP_SYSTEM.inventory.service.ProductService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,13 +25,23 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final UnitRepository unitRepository;
     private final ProductMapper productMapper;
 
+
+    @Auditable(
+            entityClass = Product.class,
+            entityType = "Product",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
+    @Transactional
     public ProductResponse create(CreateProductRequest request) {
         String code = request.code().trim().toUpperCase();
         if (productRepository.findByCode(code).isPresent()) {
@@ -50,6 +63,13 @@ public class ProductServiceImpl implements ProductService {
         return productMapper.toProductResponse(productRepository.save(product));
     }
 
+    @Auditable(
+            entityClass = Product.class,
+            entityType = "Product",
+            action = AuditAction.UPDATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public ProductResponse update(UUID id, UpdateProductRequest request) {
@@ -103,6 +123,13 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.searchProducts(search, pageable).map(productMapper::toProductResponse);
     }
 
+    @Auditable(
+            entityClass = Product.class,
+            entityType = "Product",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public ProductResponse deactivate(UUID id) {

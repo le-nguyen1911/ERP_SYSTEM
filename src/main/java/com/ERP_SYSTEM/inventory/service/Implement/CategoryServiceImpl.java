@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.inventory.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateCategoryRequest;
@@ -8,6 +10,7 @@ import com.ERP_SYSTEM.inventory.entity.Category;
 import com.ERP_SYSTEM.inventory.mapper.ProductMapper;
 import com.ERP_SYSTEM.inventory.repository.CategoryRepository;
 import com.ERP_SYSTEM.inventory.service.CategoryService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,10 +21,19 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final ProductMapper productMapper;
 
+
+    @Auditable(
+            entityClass = Category.class,
+            entityType = "Category",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
@@ -36,7 +48,13 @@ public class CategoryServiceImpl implements CategoryService {
         return productMapper.toCategoryResponse(category);
     }
 
-
+    @Auditable(
+            entityClass = Category.class,
+            entityType = "Category",
+            action = AuditAction.UPDATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public CategoryResponse update(UUID id, CreateCategoryRequest request) {
@@ -67,6 +85,13 @@ public class CategoryServiceImpl implements CategoryService {
                 .collect(Collectors.toList());
     }
 
+    @Auditable(
+            entityClass = Category.class,
+            entityType = "Category",
+            action = AuditAction.DELETE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void delete(UUID id) {

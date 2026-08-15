@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.inventory.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.inventory.dto.request.StockTransactionRequest;
 import com.ERP_SYSTEM.inventory.dto.request.StockTransferRequest;
 import com.ERP_SYSTEM.inventory.dto.request.UpdateMinQuantityRequest;
@@ -17,6 +19,7 @@ import com.ERP_SYSTEM.inventory.repository.ProductStockRepository;
 import com.ERP_SYSTEM.inventory.repository.StockTransactionRepository;
 import com.ERP_SYSTEM.inventory.repository.WarehouseRepository;
 import com.ERP_SYSTEM.inventory.service.StockService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.OptimisticLockingFailureException;
@@ -44,6 +47,13 @@ public class StockServiceImpl implements StockService {
     private final StockMapper stockMapper;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Auditable(
+            entityClass = StockTransaction.class,
+            entityType = "StockTransaction",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Retryable(retryFor = OptimisticLockingFailureException.class,
             maxAttempts = 3,
@@ -118,7 +128,13 @@ public class StockServiceImpl implements StockService {
         return stockMapper.toStockTransactionResponse(transaction);
     }
 
-
+    @Auditable(
+            entityClass = StockTransaction.class,
+            entityType = "StockTransaction",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public List<StockTransactionResponse> transferStock(StockTransferRequest request) {
@@ -189,6 +205,13 @@ public class StockServiceImpl implements StockService {
         return stockTransactionRepository.findByProductId(productId, pageable).map(stockMapper::toStockTransactionResponse);
     }
 
+    @Auditable(
+            entityClass = ProductStock.class,
+            entityType = "ProductStock",
+            action = AuditAction.UPDATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Transactional
     @Override
     public ProductStockResponse updateMinQuantity(UpdateMinQuantityRequest request) {

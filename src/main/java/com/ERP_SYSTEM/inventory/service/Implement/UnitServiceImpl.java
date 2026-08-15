@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.inventory.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateUnitRequest;
@@ -8,6 +10,7 @@ import com.ERP_SYSTEM.inventory.entity.Unit;
 import com.ERP_SYSTEM.inventory.mapper.ProductMapper;
 import com.ERP_SYSTEM.inventory.repository.UnitRepository;
 import com.ERP_SYSTEM.inventory.service.UnitService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +26,13 @@ public class UnitServiceImpl implements UnitService {
     private final ProductMapper productMapper;
 
 
+    @Auditable(
+            entityClass = Unit.class,
+            entityType = "Unit",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public UnitResponse create(CreateUnitRequest request) {
@@ -37,6 +47,13 @@ public class UnitServiceImpl implements UnitService {
         return productMapper.toUnitResponse(unit);
     }
 
+    @Auditable(
+            entityClass = Unit.class,
+            entityType = "Unit",
+            action = AuditAction.UPDATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public UnitResponse update(UUID id, CreateUnitRequest request) {
@@ -67,6 +84,13 @@ public class UnitServiceImpl implements UnitService {
                 .collect(Collectors.toList());
     }
 
+    @Auditable(
+            entityClass = Unit.class,
+            entityType = "Unit",
+            action = AuditAction.DELETE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void delete(UUID id) {

@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.inventory.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateWarehouseRequest;
 import com.ERP_SYSTEM.inventory.dto.request.UpdateWarehouseRequest;
@@ -9,6 +11,7 @@ import com.ERP_SYSTEM.inventory.mapper.StockMapper;
 import com.ERP_SYSTEM.inventory.repository.ProductStockRepository;
 import com.ERP_SYSTEM.inventory.repository.WarehouseRepository;
 import com.ERP_SYSTEM.inventory.service.WarehouseService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,9 +26,15 @@ public class WarehouseServiceImpl implements WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final StockMapper stockMapper;
-
     private final ProductStockRepository productStockRepository;
 
+    @Auditable(
+            entityClass = Warehouse.class,
+            entityType = "Warehouse",
+            action = AuditAction.CREATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public WarehouseResponse create(CreateWarehouseRequest request) {
@@ -43,6 +52,13 @@ public class WarehouseServiceImpl implements WarehouseService {
         return stockMapper.toWarehouseResponse(warehouse);
     }
 
+    @Auditable(
+            entityClass = Warehouse.class,
+            entityType = "Warehouse",
+            action = AuditAction.UPDATE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public WarehouseResponse update(UUID id, UpdateWarehouseRequest request) {
@@ -83,7 +99,13 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .collect(Collectors.toList());
     }
 
-
+    @Auditable(
+            entityClass = Warehouse.class,
+            entityType = "Warehouse",
+            action = AuditAction.DELETE,
+            module = SourceModule.INVENTORY,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void delete(UUID id) {
