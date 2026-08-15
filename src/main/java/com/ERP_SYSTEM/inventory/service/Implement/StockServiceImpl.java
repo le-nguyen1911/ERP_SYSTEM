@@ -128,13 +128,6 @@ public class StockServiceImpl implements StockService {
         return stockMapper.toStockTransactionResponse(transaction);
     }
 
-    @Auditable(
-            entityClass = StockTransaction.class,
-            entityType = "StockTransaction",
-            action = AuditAction.CREATE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
-    )
     @Override
     @Transactional
     public List<StockTransactionResponse> transferStock(StockTransferRequest request) {

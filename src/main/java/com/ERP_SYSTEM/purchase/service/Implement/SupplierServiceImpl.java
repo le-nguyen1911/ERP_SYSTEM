@@ -110,8 +110,7 @@ public class SupplierServiceImpl implements SupplierService {
             entityClass = Supplier.class,
             entityType = "Supplier",
             action = AuditAction.DELETE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional

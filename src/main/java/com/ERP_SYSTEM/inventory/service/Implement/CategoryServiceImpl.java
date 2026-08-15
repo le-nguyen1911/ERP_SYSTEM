@@ -89,8 +89,7 @@ public class CategoryServiceImpl implements CategoryService {
             entityClass = Category.class,
             entityType = "Category",
             action = AuditAction.DELETE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Override
     @Transactional

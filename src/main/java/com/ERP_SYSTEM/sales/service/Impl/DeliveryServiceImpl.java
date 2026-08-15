@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.sales.service.Impl;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
@@ -7,6 +9,7 @@ import com.ERP_SYSTEM.inventory.dto.request.StockTransactionRequest;
 import com.ERP_SYSTEM.inventory.dto.response.ProductStockResponse;
 import com.ERP_SYSTEM.inventory.entity.StockTransaction;
 import com.ERP_SYSTEM.inventory.service.StockService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.purchase.repository.SequenceRepository;
 import com.ERP_SYSTEM.sales.dto.request.CreateDeliveryRequest;
 import com.ERP_SYSTEM.sales.dto.request.DeliveryItemRequest;
@@ -59,6 +62,14 @@ public class DeliveryServiceImpl implements DeliveryService {
     private final UserRepository userRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Auditable(
+            entityClass = Delivery.class,
+            entityType = "Delivery",
+            action = AuditAction.CREATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+
+    )
     @Override
     @Transactional
     public DeliveryDetailResponse create(CreateDeliveryRequest request) {
@@ -313,6 +324,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
     }
 
+    @Auditable(
+            entityClass = Delivery.class,
+            entityType = "Delivery",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+
+    )
     @Override
     @Transactional
     public DeliveryDetailResponse markAsDelivered(UUID id) {
@@ -333,7 +352,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         return deliveryMapper.toDetailResponse(delivery);
     }
 
+    @Auditable(
+            entityClass = Delivery.class,
+            entityType = "Delivery",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
 
+    )
     @Override
     @Transactional
     public void cancel(UUID id, String reason) {

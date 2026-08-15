@@ -195,7 +195,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     @Auditable(
             entityClass = GoodsReceipt.class,
             entityType = "GoodsReceipt",
-            action = AuditAction.CREATE,
+            action = AuditAction.STATUS_CHANGE,
             module = SourceModule.PURCHASE,
             idExpression = "#result.id"
     )
@@ -379,8 +379,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             entityClass = GoodsReceipt.class,
             entityType = "GoodsReceipt",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional

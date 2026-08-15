@@ -1,8 +1,11 @@
 package com.ERP_SYSTEM.sales.service.Impl;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.purchase.repository.SequenceRepository;
 import com.ERP_SYSTEM.sales.dto.request.*;
 import com.ERP_SYSTEM.sales.dto.response.SalesOrderDetailResponse;
@@ -69,6 +72,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         }
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.CREATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse create(CreateSalesOrderRequest request) {
@@ -108,6 +118,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(saved);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse update(UUID id, UpdateSalesOrderRequest request) {
@@ -160,6 +177,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
                 .map(salesOrderMapper::toSummaryResponse);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse addItem(UUID soId, AddSalesOrderItemRequest request) {
@@ -178,6 +202,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse updateItem(UUID soId, UUID itemId, UpdateSalesOrderItemRequest request) {
@@ -198,6 +229,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse removeItem(UUID soId, UUID itemId) {
@@ -218,6 +256,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse submitForApproval(UUID id) {
@@ -233,6 +278,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse approve(UUID id, ApproveSalesOrderRequest request) {
@@ -254,6 +306,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse reject(UUID id, RejectSalesOrderRequest request) {
@@ -274,6 +333,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse confirm(UUID id) {
@@ -285,6 +351,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse cancel(UUID id, CancelSalesOrderRequest request) {
@@ -299,6 +372,13 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SalesOrderDetailResponse close(UUID id) {
@@ -313,21 +393,35 @@ public class SalesOrderServiceImpl implements SalesOrderService {
         return salesOrderMapper.toDetailResponse(salesOrder);
     }
 
+    @Auditable(
+            entityClass = SalesOrder.class,
+            entityType = "SalesOrder",
+            action = AuditAction.DELETE,
+            module = SourceModule.SALES
+    )
     @Override
     @Transactional
     public void delete(UUID id) {
-        log.info("Xoá Đơn bán hàng với id={}", id);
-        SalesOrder salesOrder = salesOrderRepository.findByIdAndIsDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm tháy đơn bán hàng với id={}", id));
 
-        if (salesOrder.getStatus().equals(SalesOrderStatus.DRAFT)) {
-            throw new IllegalStateException("cHỈ thể xoá đơn bán hàng Ở trạng thái DRAFT ");
+        log.info("Xoá đơn bán hàng với id={}", id);
+
+        SalesOrder salesOrder = salesOrderRepository
+                .findByIdAndIsDeletedFalse(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Không tìm thấy đơn bán hàng với id: " + id
+                        ));
+
+        if (salesOrder.getStatus() != SalesOrderStatus.DRAFT) {
+            throw new IllegalStateException(
+                    "Chỉ có thể xoá đơn bán hàng ở trạng thái DRAFT"
+            );
         }
 
         salesOrder.setIsDeleted(true);
+
         log.info("Xoá (soft delete) đơn bán hàng thành công, id={}", id);
     }
-
 
     // helper method
     private void validateDraftForItemModification(SalesOrder salesOrder) {

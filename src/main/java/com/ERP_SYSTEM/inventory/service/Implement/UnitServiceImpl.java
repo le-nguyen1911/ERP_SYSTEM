@@ -88,8 +88,7 @@ public class UnitServiceImpl implements UnitService {
             entityClass = Unit.class,
             entityType = "Unit",
             action = AuditAction.DELETE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Override
     @Transactional

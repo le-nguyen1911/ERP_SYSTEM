@@ -471,8 +471,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.DELETE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional

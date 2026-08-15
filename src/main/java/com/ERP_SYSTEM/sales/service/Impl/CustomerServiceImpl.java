@@ -1,7 +1,10 @@
 package com.ERP_SYSTEM.sales.service.Impl;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.sales.dto.request.CreateCustomerRequest;
 import com.ERP_SYSTEM.sales.dto.request.CustomerSearchRequest;
 import com.ERP_SYSTEM.sales.dto.request.UpdateCustomerRequest;
@@ -33,6 +36,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerMapper customerMapper;
 
 
+    @Auditable(
+            entityClass = Customer.class,
+            entityType = "Customer",
+            action = AuditAction.CREATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+
+    )
     @Override
     @Transactional
     public CustomerResponse create(CreateCustomerRequest request) {
@@ -51,6 +62,14 @@ public class CustomerServiceImpl implements CustomerService {
 
     }
 
+    @Auditable(
+            entityClass = Customer.class,
+            entityType = "Customer",
+            action = AuditAction.UPDATE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+
+    )
     @Override
     @Transactional
     public CustomerResponse update(UUID id, UpdateCustomerRequest request) {
@@ -94,6 +113,14 @@ public class CustomerServiceImpl implements CustomerService {
                 .map(customerMapper::toResponse);
     }
 
+    @Auditable(
+            entityClass = Customer.class,
+            entityType = "Customer",
+            action = AuditAction.DELETE,
+            module = SourceModule.SALES,
+            idExpression = "#result.id"
+
+    )
     @Override
     @Transactional
     public void delete(UUID id) {
