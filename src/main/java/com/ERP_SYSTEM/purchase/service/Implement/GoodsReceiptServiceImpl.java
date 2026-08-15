@@ -1,11 +1,14 @@
 package com.ERP_SYSTEM.purchase.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.StockTransactionRequest;
 import com.ERP_SYSTEM.inventory.entity.StockTransaction;
 import com.ERP_SYSTEM.inventory.service.StockService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.purchase.dto.request.CreateGoodsReceiptRequest;
 import com.ERP_SYSTEM.purchase.dto.request.GoodsReceiptItemRequest;
 import com.ERP_SYSTEM.purchase.dto.request.QualityCheckRequest;
@@ -53,6 +56,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     private final StockService stockService;
     private final ApplicationEventPublisher eventPublisher;
 
+    @Auditable(
+            entityClass = GoodsReceipt.class,
+            entityType = "GoodsReceipt",
+            action = AuditAction.CREATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public GoodsReceiptDetailResponse create(CreateGoodsReceiptRequest request) {
@@ -156,6 +166,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     }
 
 
+    @Auditable(
+            entityClass = GoodsReceipt.class,
+            entityType = "GoodsReceipt",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public GoodsReceiptDetailResponse markAsReceived(UUID id) {
@@ -175,6 +192,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
     }
 
 
+    @Auditable(
+            entityClass = GoodsReceipt.class,
+            entityType = "GoodsReceipt",
+            action = AuditAction.CREATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public GoodsReceiptDetailResponse performQualityCheck(UUID id, QualityCheckRequest request) {
@@ -302,7 +326,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         }
     }
 
-
+    @Auditable(
+            entityClass = GoodsReceipt.class,
+            entityType = "GoodsReceipt",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public GoodsReceiptDetailResponse retryInventoryImport(UUID id) {
@@ -345,7 +375,13 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
         }
     }
 
-
+    @Auditable(
+            entityClass = GoodsReceipt.class,
+            entityType = "GoodsReceipt",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void cancel(UUID id, String reason) {

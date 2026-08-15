@@ -1,8 +1,11 @@
 package com.ERP_SYSTEM.purchase.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.purchase.dto.request.*;
 import com.ERP_SYSTEM.purchase.dto.response.PurchaseOrderDetailResponse;
 import com.ERP_SYSTEM.purchase.dto.response.PurchaseOrderSummaryResponse;
@@ -70,6 +73,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         }
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.CREATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse create(CreatePurchaseOrderRequest request) {
@@ -140,6 +150,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return "PO-" + datePart + "-" + String.format("%06d", sequenceValue);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse update(UUID id, UpdatePurchaseOrderRequest request) {
@@ -206,6 +223,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
                 .map(purchaseOrderMapper::toSummaryResponse);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse addItem(UUID poId, AddPurchaseOrderItemRequest request) {
@@ -229,6 +253,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse updateItem(UUID poId, UUID itemId, UpdatePurchaseOrderItemRequest request) {
@@ -253,7 +284,15 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
+    @Transactional
     public PurchaseOrderDetailResponse removeItem(UUID poId, UUID itemId) {
         log.info("Xóa dòng sản phẩm id={} khỏi đơn đặt hàng id={}", itemId, poId);
 
@@ -278,6 +317,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse submitForApproval(UUID id) {
@@ -296,6 +342,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse approve(UUID id, ApprovePurchaseOrderRequest request) {
@@ -319,6 +372,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse reject(UUID id, RejectPurchaseOrderRequest request) {
@@ -341,6 +401,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse sendToSupplier(UUID id) {
@@ -355,6 +422,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse cancel(UUID id, CancelPurchaseOrderRequest request) {
@@ -372,6 +446,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public PurchaseOrderDetailResponse close(UUID id) {
@@ -386,6 +467,13 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
         return purchaseOrderMapper.toDetailResponse(purchaseOrder);
     }
 
+    @Auditable(
+            entityClass = PurchaseOrder.class,
+            entityType = "PurchaseOrder",
+            action = AuditAction.DELETE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void delete(UUID id) {

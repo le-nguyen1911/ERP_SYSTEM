@@ -1,7 +1,10 @@
 package com.ERP_SYSTEM.purchase.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import com.ERP_SYSTEM.purchase.dto.request.CreateSupplierRequest;
 import com.ERP_SYSTEM.purchase.dto.request.SupplierSearchRequest;
 import com.ERP_SYSTEM.purchase.dto.request.UpdateSupplierRequest;
@@ -31,6 +34,13 @@ public class SupplierServiceImpl implements SupplierService {
     private final SupplierMapper supplierMapper;
     private final PurchaseOrderRepository purchaseOrderRepository;
 
+    @Auditable(
+            entityClass = Supplier.class,
+            entityType = "Supplier",
+            action = AuditAction.CREATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SupplierResponse create(CreateSupplierRequest request) {
@@ -53,6 +63,13 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toResponse(saved);
     }
 
+    @Auditable(
+            entityClass = Supplier.class,
+            entityType = "Supplier",
+            action = AuditAction.UPDATE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public SupplierResponse update(UUID id, UpdateSupplierRequest request) {
@@ -89,6 +106,13 @@ public class SupplierServiceImpl implements SupplierService {
                 .map(supplierMapper::toResponse);
     }
 
+    @Auditable(
+            entityClass = Supplier.class,
+            entityType = "Supplier",
+            action = AuditAction.DELETE,
+            module = SourceModule.PURCHASE,
+            idExpression = "#result.id"
+    )
     @Override
     @Transactional
     public void delete(UUID id) {
