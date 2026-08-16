@@ -170,8 +170,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             entityClass = GoodsReceipt.class,
             entityType = "GoodsReceipt",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -196,9 +195,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             entityClass = GoodsReceipt.class,
             entityType = "GoodsReceipt",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
-    )
+            module = SourceModule.PURCHASE)
     @Override
     @Transactional
     public GoodsReceiptDetailResponse performQualityCheck(UUID id, QualityCheckRequest request) {
@@ -330,8 +327,7 @@ public class GoodsReceiptServiceImpl implements GoodsReceiptService {
             entityClass = GoodsReceipt.class,
             entityType = "GoodsReceipt",
             action = AuditAction.UPDATE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional

@@ -66,9 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
             entityClass = Customer.class,
             entityType = "Customer",
             action = AuditAction.UPDATE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
-
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -117,8 +115,7 @@ public class CustomerServiceImpl implements CustomerService {
             entityClass = Customer.class,
             entityType = "Customer",
             action = AuditAction.DELETE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
 
     )
     @Override

@@ -56,8 +56,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             entityClass = Warehouse.class,
             entityType = "Warehouse",
             action = AuditAction.UPDATE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Override
     @Transactional

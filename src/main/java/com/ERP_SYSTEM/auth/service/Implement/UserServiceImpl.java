@@ -1,5 +1,8 @@
 package com.ERP_SYSTEM.auth.service.Implement;
 
+import com.ERP_SYSTEM.audit.annotation.Auditable;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.audit.service.AuditLogService;
 import com.ERP_SYSTEM.auth.dto.request.AssignRoleRequest;
 import com.ERP_SYSTEM.auth.dto.request.ChangePasswordRequest;
 import com.ERP_SYSTEM.auth.dto.request.UpdateUserRequest;
@@ -11,6 +14,7 @@ import com.ERP_SYSTEM.auth.repository.RefreshTokenRepository;
 import com.ERP_SYSTEM.auth.repository.RoleRepository;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.auth.service.UserService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +36,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     public Page<UserInfoResponse> getAllUsers(Pageable pageable) {
@@ -45,52 +50,56 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserInfoResponse(user);
     }
 
+
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.UPDATE, module = SourceModule.AUTH)
     @Override
     @Transactional
     public UserInfoResponse updateUser(UUID id, UpdateUserRequest request) {
         User user = findUserById(id);
-        // Kiểm tra email mới có bị trùng không
         if (request.getEmail() != null
-                // Chỉ check khi có gửi email mới
                 && !request.getEmail().equals(user.getEmail())
-                // Không check nếu email giống email cũ
                 && userRepository.existsByEmail(request.getEmail())) {
-            // Email khác mà đã tồn tại → báo lỗi
             throw new RuntimeException("Email đã được sử dụng");
         }
         userMapper.updateUserFromRequest(request, user);
-        //MapStruct update các field khác null
         userRepository.save(user);
 
         return userMapper.toUserInfoResponse(user);
     }
 
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.DELETE, module = SourceModule.AUTH)
     @Override
     @Transactional
     public void deleteUser(UUID id) {
         User user = findUserById(id);
         userRepository.delete(user);
-
     }
 
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.STATUS_CHANGE, module = SourceModule.AUTH)
     @Override
     @Transactional
-
     public void lockUser(UUID id) {
         User user = findUserById(id);
         user.setEnabled(false);
         userRepository.save(user);
     }
 
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.STATUS_CHANGE, module = SourceModule.AUTH)
     @Override
     @Transactional
     public void unlockUser(UUID id) {
         User user = findUserById(id);
         user.setEnabled(true);
         userRepository.save(user);
-
     }
 
+
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.UPDATE, module = SourceModule.AUTH)
     @Override
     @Transactional
     public UserInfoResponse assignRoles(UUID id, AssignRoleRequest request) {
@@ -105,62 +114,41 @@ public class UserServiceImpl implements UserService {
         return userMapper.toUserInfoResponse(user);
     }
 
+    @Auditable(entityClass = User.class, entityType = "User",
+            action = AuditAction.UPDATE, module = SourceModule.AUTH)
     @Override
     @Transactional
-    public UserInfoResponse removeRoles(UUID id,
-                                        AssignRoleRequest request) {
+    public UserInfoResponse removeRoles(UUID id, AssignRoleRequest request) {
         User user = findUserById(id);
-
-        user.getRoles().removeIf(role ->
-                request.getRoles().contains(role.getName())
-        );
-        // removeIf → xóa phần tử thỏa điều kiện
-        // role → role.getName() có trong danh sách cần xóa không?
-        // Ví dụ: xóa ["MANAGER"] → chỉ xóa role MANAGER
-        // USER vẫn còn
-
+        user.getRoles().removeIf(role -> request.getRoles().contains(role.getName()));
         userRepository.save(user);
         return userMapper.toUserInfoResponse(user);
     }
 
+
     @Override
     @Transactional
-    public void changePassword(String username,
-                               ChangePasswordRequest request) {
+    public void changePassword(String username, ChangePasswordRequest request) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException(
-                        "Không tìm thấy user"
-                ));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
-        // Kiểm tra password cũ có đúng không
-        if (!passwordEncoder.matches(
-                request.getOldPassword(),
-                // password cũ client gửi lên (plain text)
-                user.getPassword())) {
-            // password hash đang lưu trong DB
-            // BCrypt.matches tự so sánh plain vs hash
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
             throw new RuntimeException("Password cũ không đúng");
         }
 
-        // Hash password mới rồi lưu
-        user.setPassword(
-                passwordEncoder.encode(request.getNewPassword())
-        );
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
         refreshTokenRepository.revokeAllUserTokens(
-                user.getId(),
-                LocalDateTime.now(),
-                "PASSWORD_CHANGE"
-        );
+                user.getId(), LocalDateTime.now(), "PASSWORD_CHANGE");
+
+
+        auditLogService.logSystemEvent(
+                "User", user.getId(), AuditAction.UPDATE, user.getId(),
+                SourceModule.AUTH, "Người dùng tự đổi mật khẩu");
     }
 
-    // ── Helper method ────────────────────────────────────
     private User findUserById(UUID id) {
         return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException(
-                        "Không tìm thấy user với id: " + id
-                ));
-        // Dùng chung cho nhiều method
-        // Tránh copy paste .orElseThrow() ở mọi nơi
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user với id: " + id));
     }
 }

@@ -1,5 +1,7 @@
 package com.ERP_SYSTEM.auth.service.Implement;
 
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.audit.service.AuditLogService;
 import com.ERP_SYSTEM.auth.dto.request.LoginRequest;
 import com.ERP_SYSTEM.auth.dto.request.RegisterRequest;
 import com.ERP_SYSTEM.auth.dto.response.ActiveSessionResponse;
@@ -14,6 +16,7 @@ import com.ERP_SYSTEM.auth.repository.RoleRepository;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
 import com.ERP_SYSTEM.auth.security.JwtTokenProvider;
 import com.ERP_SYSTEM.auth.service.AuthService;
+import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,6 +44,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserDetailsServiceImpl userDetailsService;
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuditLogService auditLogService;
 
     @Value("${jwt.refresh-token-expiration}")
     private long refreshTokenExpiration;
@@ -66,23 +70,38 @@ public class AuthServiceImpl implements AuthService {
                 .roles(Set.of(userRole)).build();
         userRepository.save(user);
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
+
         return buildAuthResponse(userDetails, user, "Web Browser");
     }
 
     @Override
     @Transactional
     public AuthResponse login(LoginRequest request, String deviceInfo) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getUsername(),
-                        request.getPassword()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getUsername(),
+                            request.getPassword()));
+        } catch (org.springframework.security.core.AuthenticationException ex) {
+
+            auditLogService.logSystemEvent(
+                    "User", null, AuditAction.UPDATE, null,
+                    SourceModule.AUTH,
+                    "Đăng nhập thất bại - username: " + request.getUsername()
+                            + " - thiết bị: " + deviceInfo
+                            + " - lý do: " + ex.getClass().getSimpleName());
+            throw ex;
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(request.getUsername());
         User user = userRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new RuntimeException("Không tìm tháy user"));
 
+        auditLogService.logSystemEvent(
+                "User", user.getId(), AuditAction.UPDATE, user.getId(),
+                SourceModule.AUTH, "Đăng nhập thành công từ thiết bị: " + deviceInfo);
 
-        return buildAuthResponse(userDetails, user, deviceInfo != null ? deviceInfo : "unlknow device");
+        return buildAuthResponse(userDetails, user, deviceInfo != null ? deviceInfo : "unknown device");
     }
 
 

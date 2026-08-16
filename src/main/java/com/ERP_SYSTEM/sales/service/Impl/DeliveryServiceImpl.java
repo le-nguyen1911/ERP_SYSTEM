@@ -328,8 +328,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             entityClass = Delivery.class,
             entityType = "Delivery",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
 
     )
     @Override
@@ -356,8 +355,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             entityClass = Delivery.class,
             entityType = "Delivery",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
 
     )
     @Override

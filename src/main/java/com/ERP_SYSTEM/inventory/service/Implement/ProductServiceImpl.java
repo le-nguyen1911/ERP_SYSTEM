@@ -67,8 +67,7 @@ public class ProductServiceImpl implements ProductService {
             entityClass = Product.class,
             entityType = "Product",
             action = AuditAction.UPDATE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Override
     @Transactional
@@ -127,8 +126,7 @@ public class ProductServiceImpl implements ProductService {
             entityClass = Product.class,
             entityType = "Product",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Override
     @Transactional

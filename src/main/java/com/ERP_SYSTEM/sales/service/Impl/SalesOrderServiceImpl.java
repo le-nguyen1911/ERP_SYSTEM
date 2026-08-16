@@ -122,8 +122,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.UPDATE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -182,7 +181,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityType = "SalesOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.SALES,
-            idExpression = "#result.id"
+            idExpression = "#soId"
     )
     @Override
     @Transactional
@@ -207,7 +206,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityType = "SalesOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.SALES,
-            idExpression = "#result.id"
+            idExpression = "#soId"
     )
     @Override
     @Transactional
@@ -234,7 +233,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityType = "SalesOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.SALES,
-            idExpression = "#result.id"
+            idExpression = "#soId"
     )
     @Override
     @Transactional
@@ -260,8 +259,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -282,8 +280,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -310,8 +307,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -337,8 +333,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -355,8 +350,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional
@@ -376,8 +370,7 @@ public class SalesOrderServiceImpl implements SalesOrderService {
             entityClass = SalesOrder.class,
             entityType = "SalesOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.SALES,
-            idExpression = "#result.id"
+            module = SourceModule.SALES
     )
     @Override
     @Transactional

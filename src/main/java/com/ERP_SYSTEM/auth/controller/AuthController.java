@@ -86,8 +86,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<List<ActiveSessionResponse>>> getSessions(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestHeader("Refresh-Token") String currentToken) {
-        // Xem danh sách thiết bị đang đăng nhập
-        // currentToken để đánh dấu thiết bị hiện tại
+
         return ResponseEntity.ok(
                 ApiResponse.success(
                         authService.getActiveSessions(
@@ -108,15 +107,13 @@ public class AuthController {
     }
 
 
-    // Helper: lấy thông tin thiết bị từ User-Agent
     private String extractDeviceInfo(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
-        // User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)
-        //              AppleWebKit/537.36 Chrome/91.0..."
+
 
         if (userAgent == null) return "Unknown Device";
 
-        // Phân tích User-Agent đơn giản
+
         if (userAgent.contains("Mobile")) {
             return "Mobile Browser";
         } else if (userAgent.contains("Chrome")) {

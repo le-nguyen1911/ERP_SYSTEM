@@ -52,9 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
             entityClass = Category.class,
             entityType = "Category",
             action = AuditAction.UPDATE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
-    )
+            module = SourceModule.INVENTORY)
     @Override
     @Transactional
     public CategoryResponse update(UUID id, CreateCategoryRequest request) {

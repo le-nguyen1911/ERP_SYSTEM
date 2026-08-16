@@ -202,8 +202,7 @@ public class StockServiceImpl implements StockService {
             entityClass = ProductStock.class,
             entityType = "ProductStock",
             action = AuditAction.UPDATE,
-            module = SourceModule.INVENTORY,
-            idExpression = "#result.id"
+            module = SourceModule.INVENTORY
     )
     @Transactional
     @Override

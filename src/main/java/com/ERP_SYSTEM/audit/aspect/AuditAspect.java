@@ -15,12 +15,12 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.hibernate.Session;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.springframework.context.expression.MethodBasedEvaluationContext;
 import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.core.annotation.Order;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -38,6 +38,7 @@ import java.util.UUID;
 @Slf4j
 @Aspect
 @Component
+@Order(1)
 @RequiredArgsConstructor
 public class AuditAspect {
 
@@ -115,13 +116,20 @@ public class AuditAspect {
 
 
     private Map<String, Object> captureLoadedState(Object entity) {
-        Session session = entityManager.unwrap(Session.class);
-        PersistenceContext persistenceContext =
-                ((SessionImplementor) session).getPersistenceContext();
+        // Unwrap THẲNG xuống SessionImplementor - KHÔNG qua Session rồi
+        // cast thủ công. Vì Spring's Shared EntityManager Proxy implement
+        // luôn interface Session (do Session extends EntityManager ở
+        // Hibernate 6), nếu unwrap(Session.class) trước, Spring sẽ trả về
+        // CHÍNH PROXY (vì proxy "is-a" Session) thay vì Session thật -
+        // proxy đó không implement SessionImplementor -> ClassCastException.
+        // Unwrap thẳng SessionImplementor buộc Spring phải delegate xuống
+        // SessionImpl THẬT của Hibernate (vì proxy không "is-a"
+        // SessionImplementor), tránh hoàn toàn vấn đề trên.
+        SessionImplementor session = entityManager.unwrap(SessionImplementor.class);
+        PersistenceContext persistenceContext = session.getPersistenceContext();
         EntityEntry entry = persistenceContext.getEntry(entity);
 
         if (entry == null || entry.getLoadedState() == null) {
-
             return new HashMap<>();
         }
 
@@ -131,40 +139,39 @@ public class AuditAspect {
         return buildSanitizedMap(propertyNames, loadedState);
     }
 
-
     private Map<String, Object> captureCurrentState(Object entity) {
-        Session session = entityManager.unwrap(Session.class);
-        PersistenceContext persistenceContext =
-                ((SessionImplementor) session).getPersistenceContext();
+        SessionImplementor session = entityManager.unwrap(SessionImplementor.class);
+        PersistenceContext persistenceContext = session.getPersistenceContext();
         EntityEntry entry = persistenceContext.getEntry(entity);
 
         String[] propertyNames = entry.getPersister().getPropertyNames();
-        Object[] currentState = entry.getPersister()
-                .getPropertyValues(entity);
+        Object[] currentState = entry.getPersister().getPropertyValues(entity);
 
         return buildSanitizedMap(propertyNames, currentState);
     }
 
+    private static final java.util.Set<String> SENSITIVE_FIELDS =
+            java.util.Set.of("password", "passwordHash", "refreshToken", "otpSecret");
 
     private Map<String, Object> buildSanitizedMap(String[] propertyNames, Object[] values) {
         Map<String, Object> result = new LinkedHashMap<>();
 
         for (int i = 0; i < propertyNames.length; i++) {
-            Object value = values[i];
+            if (SENSITIVE_FIELDS.contains(propertyNames[i])) {
+                continue;
+            }
 
+            Object value = values[i];
             if (value == null) {
                 result.put(propertyNames[i], null);
             } else if (value instanceof java.util.Collection) {
-
                 continue;
             } else if (isEntityReference(value)) {
-
                 result.put(propertyNames[i], extractIdFromEntity(value));
             } else {
                 result.put(propertyNames[i], value);
             }
         }
-
         return result;
     }
 

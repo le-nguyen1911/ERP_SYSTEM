@@ -154,8 +154,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.UPDATE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -228,7 +227,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityType = "PurchaseOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            idExpression = "#poId"
     )
     @Override
     @Transactional
@@ -258,7 +257,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityType = "PurchaseOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            idExpression = "#poId"
     )
     @Override
     @Transactional
@@ -289,7 +288,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityType = "PurchaseOrder",
             action = AuditAction.UPDATE,
             module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            idExpression = "#poId"
     )
     @Override
     @Transactional
@@ -321,8 +320,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -346,8 +344,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -376,8 +373,8 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
+
     )
     @Override
     @Transactional
@@ -405,8 +402,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -426,8 +422,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
@@ -450,8 +445,7 @@ public class PurchaseOrderServiceImpl implements PurchaseOrderService {
             entityClass = PurchaseOrder.class,
             entityType = "PurchaseOrder",
             action = AuditAction.STATUS_CHANGE,
-            module = SourceModule.PURCHASE,
-            idExpression = "#result.id"
+            module = SourceModule.PURCHASE
     )
     @Override
     @Transactional
