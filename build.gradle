@@ -43,13 +43,10 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testAnnotationProcessor 'org.projectlombok:lombok'
 
-
 // Core Flyway
     implementation 'org.flywaydb:flyway-core'
-
 // PostgreSQL support cho Flyway
     implementation 'org.flywaydb:flyway-database-postgresql'
-
 // PostgreSQL JDBC Driver
     runtimeOnly 'org.postgresql:postgresql'
 }
