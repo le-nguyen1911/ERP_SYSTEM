@@ -48,7 +48,3 @@ jobs:
 
       - name: Build and test
         run: ./gradlew clean build
-        env:
-          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5434/erp_system
-          SPRING_DATASOURCE_USERNAME: admin
-          SPRING_DATASOURCE_PASSWORD: 123456
