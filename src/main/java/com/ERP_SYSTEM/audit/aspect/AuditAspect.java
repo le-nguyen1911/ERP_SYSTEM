@@ -1,6 +1,5 @@
 package com.ERP_SYSTEM.audit.aspect;
 
-
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.AuditLog;
 import com.ERP_SYSTEM.audit.repository.AuditLogRepository;
@@ -30,10 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Aspect
@@ -42,198 +38,620 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuditAspect {
 
-    private final EntityManager entityManager;
-    private final AuditLogRepository auditLogRepository;
-    private final ObjectMapper objectMapper;
-    private final UserRepository userRepository;
-    private final ExpressionParser expressionParser = new SpelExpressionParser();
-    private final DefaultParameterNameDiscoverer parameterNameDiscoverer =
-            new DefaultParameterNameDiscoverer();
+        private final EntityManager entityManager;
+        private final AuditLogRepository auditLogRepository;
+        private final ObjectMapper objectMapper;
+        private final UserRepository userRepository;
 
+        private final ExpressionParser expressionParser = new SpelExpressionParser();
 
-    @Around("@annotation(auditable)")
-    public Object audit(ProceedingJoinPoint joinPoint, Auditable auditable) throws Throwable {
+        private final DefaultParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
 
-        UUID entityId = resolveEntityIdBeforeProceed(joinPoint, auditable);
+        private static final Set<String> SENSITIVE_FIELDS = Set.of(
+                        "password",
+                        "passwordHash",
+                        "refreshToken",
+                        "otpSecret");
 
+        /**
+         * Main audit interceptor.
+         */
+        @Around("@annotation(auditable)")
+        public Object audit(
+                        ProceedingJoinPoint joinPoint,
+                        Auditable auditable) throws Throwable {
 
-        Object entityBeforeProceed = entityId != null
-                ? entityManager.find(auditable.entityClass(), entityId)
-                : null;
+                /*
+                 * ============================================================
+                 * 1. Resolve entity ID BEFORE business method
+                 * ============================================================
+                 */
+                UUID entityId = resolveEntityIdBeforeProceed(
+                                joinPoint,
+                                auditable);
 
-        Map<String, Object> oldValueSnapshot = entityBeforeProceed != null
-                ? captureLoadedState(entityBeforeProceed)
-                : null;
+                /*
+                 * ============================================================
+                 * 2. Capture OLD state
+                 * ============================================================
+                 */
+                Map<String, Object> oldValueSnapshot = null;
 
+                if (entityId != null) {
 
-        Object result = joinPoint.proceed();
+                        Object entityBeforeProceed = entityManager.find(
+                                        auditable.entityClass(),
+                                        entityId);
 
+                        if (entityBeforeProceed != null) {
 
-        UUID finalEntityId = entityId != null
-                ? entityId
-                : resolveEntityIdFromResult(result);
+                                oldValueSnapshot = captureLoadedState(entityBeforeProceed);
 
-        Object entityAfterProceed = entityManager.find(auditable.entityClass(), finalEntityId);
+                        } else {
 
-        Map<String, Object> newValueSnapshot = captureCurrentState(entityAfterProceed);
-
-
-        saveAuditLog(auditable, finalEntityId, oldValueSnapshot, newValueSnapshot);
-
-        return result;
-    }
-
-
-    private UUID resolveEntityIdBeforeProceed(ProceedingJoinPoint joinPoint, Auditable auditable) {
-
-        if (auditable.idExpression().startsWith("#result")) {
-            return null;
-        }
-
-        MethodSignature signature = (MethodSignature) joinPoint.getSignature();
-        Method method = signature.getMethod();
-        Object[] args = joinPoint.getArgs();
-
-        MethodBasedEvaluationContext context = new MethodBasedEvaluationContext(
-                null, method, args, parameterNameDiscoverer);
-
-        Expression expression = expressionParser.parseExpression(auditable.idExpression());
-        Object value = expression.getValue(context);
-        return value != null ? (UUID) value : null;
-    }
-
-    private UUID resolveEntityIdFromResult(Object result) {
-        try {
-
-            Method idAccessor = result.getClass().getMethod("id");
-            return (UUID) idAccessor.invoke(result);
-        } catch (Exception ex) {
-            log.warn("Không thể trích xuất id từ kết quả trả về để ghi Audit Log: {}",
-                    ex.getMessage());
-            return null;
-        }
-    }
-
-
-    private Map<String, Object> captureLoadedState(Object entity) {
-        // Unwrap THẲNG xuống SessionImplementor - KHÔNG qua Session rồi
-        // cast thủ công. Vì Spring's Shared EntityManager Proxy implement
-        // luôn interface Session (do Session extends EntityManager ở
-        // Hibernate 6), nếu unwrap(Session.class) trước, Spring sẽ trả về
-        // CHÍNH PROXY (vì proxy "is-a" Session) thay vì Session thật -
-        // proxy đó không implement SessionImplementor -> ClassCastException.
-        // Unwrap thẳng SessionImplementor buộc Spring phải delegate xuống
-        // SessionImpl THẬT của Hibernate (vì proxy không "is-a"
-        // SessionImplementor), tránh hoàn toàn vấn đề trên.
-        SessionImplementor session = entityManager.unwrap(SessionImplementor.class);
-        PersistenceContext persistenceContext = session.getPersistenceContext();
-        EntityEntry entry = persistenceContext.getEntry(entity);
-
-        if (entry == null || entry.getLoadedState() == null) {
-            return new HashMap<>();
-        }
-
-        Object[] loadedState = entry.getLoadedState();
-        String[] propertyNames = entry.getPersister().getPropertyNames();
-
-        return buildSanitizedMap(propertyNames, loadedState);
-    }
-
-    private Map<String, Object> captureCurrentState(Object entity) {
-        SessionImplementor session = entityManager.unwrap(SessionImplementor.class);
-        PersistenceContext persistenceContext = session.getPersistenceContext();
-        EntityEntry entry = persistenceContext.getEntry(entity);
-
-        String[] propertyNames = entry.getPersister().getPropertyNames();
-        Object[] currentState = entry.getPersister().getPropertyValues(entity);
-
-        return buildSanitizedMap(propertyNames, currentState);
-    }
-
-    private static final java.util.Set<String> SENSITIVE_FIELDS =
-            java.util.Set.of("password", "passwordHash", "refreshToken", "otpSecret");
-
-    private Map<String, Object> buildSanitizedMap(String[] propertyNames, Object[] values) {
-        Map<String, Object> result = new LinkedHashMap<>();
-
-        for (int i = 0; i < propertyNames.length; i++) {
-            if (SENSITIVE_FIELDS.contains(propertyNames[i])) {
-                continue;
-            }
-
-            Object value = values[i];
-            if (value == null) {
-                result.put(propertyNames[i], null);
-            } else if (value instanceof java.util.Collection) {
-                continue;
-            } else if (isEntityReference(value)) {
-                result.put(propertyNames[i], extractIdFromEntity(value));
-            } else {
-                result.put(propertyNames[i], value);
-            }
-        }
-        return result;
-    }
-
-
-    private boolean isEntityReference(Object value) {
-        for (Field field : value.getClass().getDeclaredFields()) {
-            if (field.isAnnotationPresent(Id.class)) {
-                return true;
-            }
-        }
-
-        Class<?> superclass = value.getClass().getSuperclass();
-        while (superclass != null) {
-            for (Field field : superclass.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Id.class)) {
-                    return true;
+                                log.debug(
+                                                "Audit: Entity {} with id {} does not exist before operation",
+                                                auditable.entityClass().getSimpleName(),
+                                                entityId);
+                        }
                 }
-            }
-            superclass = superclass.getSuperclass();
+
+                /*
+                 * ============================================================
+                 * 3. Execute business method
+                 * ============================================================
+                 */
+                Object result = joinPoint.proceed();
+
+                /*
+                 * ============================================================
+                 * 4. Resolve final entity ID
+                 * ============================================================
+                 */
+                UUID finalEntityId = entityId != null
+                                ? entityId
+                                : resolveEntityIdFromResult(result);
+
+                /*
+                 * ============================================================
+                 * 5. Capture NEW state
+                 * ============================================================
+                 */
+                Map<String, Object> newValueSnapshot = null;
+
+                if (finalEntityId != null) {
+
+                        Object entityAfterProceed = entityManager.find(
+                                        auditable.entityClass(),
+                                        finalEntityId);
+
+                        if (entityAfterProceed != null) {
+
+                                newValueSnapshot = captureCurrentState(entityAfterProceed);
+
+                        } else {
+
+                                log.debug(
+                                                "Audit: Entity {} with id {} does not exist after operation",
+                                                auditable.entityClass().getSimpleName(),
+                                                finalEntityId);
+                        }
+                }
+
+                /*
+                 * ============================================================
+                 * 6. Save audit
+                 * ============================================================
+                 */
+                saveAuditLog(
+                                auditable,
+                                finalEntityId,
+                                oldValueSnapshot,
+                                newValueSnapshot);
+
+                return result;
         }
-        return false;
-    }
 
-    private Object extractIdFromEntity(Object entity) {
-        try {
-            Method getId = entity.getClass().getMethod("getId");
-            return getId.invoke(entity);
-        } catch (Exception ex) {
-            return null;
+        /**
+         * Resolve entity ID before business method executes.
+         */
+        private UUID resolveEntityIdBeforeProceed(
+                        ProceedingJoinPoint joinPoint,
+                        Auditable auditable) {
+
+                if (auditable.idExpression().startsWith("#result")) {
+                        return null;
+                }
+
+                MethodSignature signature = (MethodSignature) joinPoint.getSignature();
+
+                Method method = signature.getMethod();
+
+                Object[] args = joinPoint.getArgs();
+
+                MethodBasedEvaluationContext context = new MethodBasedEvaluationContext(
+                                null,
+                                method,
+                                args,
+                                parameterNameDiscoverer);
+
+                Expression expression = expressionParser.parseExpression(
+                                auditable.idExpression());
+
+                Object value = expression.getValue(context);
+
+                if (value == null) {
+                        return null;
+                }
+
+                if (value instanceof UUID uuid) {
+                        return uuid;
+                }
+
+                try {
+                        return UUID.fromString(value.toString());
+                } catch (Exception ex) {
+
+                        log.warn(
+                                        "Audit: Cannot convert entity ID [{}] to UUID",
+                                        value);
+
+                        return null;
+                }
         }
-    }
 
-    private void saveAuditLog(Auditable auditable, UUID entityId,
-                              Map<String, Object> oldValue, Map<String, Object> newValue) {
-        try {
-            AuditLog log = AuditLog.builder()
-                    .entityType(auditable.entityType())
-                    .entityId(entityId)
-                    .action(auditable.action())
-                    .oldValue(oldValue != null ? objectMapper.writeValueAsString(oldValue) : null)
-                    .newValue(objectMapper.writeValueAsString(newValue))
-                    .performedById(getCurrentUser().getId())
-                    .module(auditable.module())
-                    .build();
+        /**
+         * Resolve entity ID from method result.
+         * <p>
+         * Supports record DTO:
+         * <p>
+         * public record UserResponse(UUID id, ...) {}
+         */
+        private UUID resolveEntityIdFromResult(Object result) {
 
-            auditLogRepository.save(log);
-        } catch (Exception ex) {
+                if (result == null) {
+                        return null;
+                }
 
-            log.error("Ghi Audit Log thất bại: {}", ex.getMessage(), ex);
+                try {
+
+                        Method idAccessor = result.getClass().getMethod("id");
+
+                        Object id = idAccessor.invoke(result);
+
+                        if (id instanceof UUID uuid) {
+                                return uuid;
+                        }
+
+                        if (id != null) {
+                                return UUID.fromString(id.toString());
+                        }
+
+                } catch (NoSuchMethodException ignored) {
+
+                        /*
+                         * Some DTOs use getId() instead of id().
+                         */
+
+                        try {
+
+                                Method getIdAccessor = result.getClass().getMethod("getId");
+
+                                Object id = getIdAccessor.invoke(result);
+
+                                if (id instanceof UUID uuid) {
+                                        return uuid;
+                                }
+
+                                if (id != null) {
+                                        return UUID.fromString(id.toString());
+                                }
+
+                        } catch (Exception ex) {
+
+                                log.warn(
+                                                "Không thể trích xuất id từ kết quả trả về: {}",
+                                                ex.getMessage());
+                        }
+
+                } catch (Exception ex) {
+
+                        log.warn(
+                                        "Không thể trích xuất id từ kết quả trả về: {}",
+                                        ex.getMessage());
+                }
+
+                return null;
         }
-    }
 
-    private User getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        /**
+         * Capture OLD state.
+         * <p>
+         * Hibernate's EntityEntry contains the original loaded state.
+         */
+        private Map<String, Object> captureLoadedState(Object entity) {
 
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("Người dùng chưa được xác thực");
+                if (entity == null) {
+                        return null;
+                }
+
+                try {
+
+                        SessionImplementor session = entityManager.unwrap(
+                                        SessionImplementor.class);
+
+                        PersistenceContext persistenceContext = session.getPersistenceContext();
+
+                        EntityEntry entry = persistenceContext.getEntry(entity);
+
+                        /*
+                         * IMPORTANT:
+                         *
+                         * getEntry(entity) may return null.
+                         *
+                         * Never call:
+                         *
+                         * entry.getPersister()
+                         *
+                         * before checking this.
+                         */
+                        if (entry == null) {
+
+                                log.warn(
+                                                "Audit: EntityEntry is null while capturing OLD state. Entity={}",
+                                                entity.getClass().getSimpleName());
+
+                                return captureStateUsingPersister(
+                                                session,
+                                                entity);
+                        }
+
+                        Object[] loadedState = entry.getLoadedState();
+
+                        if (loadedState == null) {
+
+                                log.warn(
+                                                "Audit: loadedState is null for entity {}",
+                                                entity.getClass().getSimpleName());
+
+                                return captureStateUsingPersister(
+                                                session,
+                                                entity);
+                        }
+
+                        org.hibernate.persister.entity.EntityPersister persister = entry.getPersister();
+
+                        String[] propertyNames = persister.getPropertyNames();
+
+                        return buildSanitizedMap(
+                                        propertyNames,
+                                        loadedState);
+
+                } catch (Exception ex) {
+
+                        log.error(
+                                        "Audit: Failed to capture OLD state for {}: {}",
+                                        entity.getClass().getSimpleName(),
+                                        ex.getMessage(),
+                                        ex);
+
+                        return new LinkedHashMap<>();
+                }
         }
 
-        String username = authentication.getName();
+        /**
+         * Capture NEW/current state.
+         * <p>
+         * This method no longer assumes EntityEntry is always available.
+         */
+        private Map<String, Object> captureCurrentState(Object entity) {
 
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalStateException("Không tìm thấy người dùng: " + username));
-    }
+                if (entity == null) {
+                        return null;
+                }
+
+                try {
+
+                        SessionImplementor session = entityManager.unwrap(
+                                        SessionImplementor.class);
+
+                        PersistenceContext persistenceContext = session.getPersistenceContext();
+
+                        EntityEntry entry = persistenceContext.getEntry(entity);
+
+                        /*
+                         * EntityEntry exists.
+                         */
+                        if (entry != null) {
+
+                                org.hibernate.persister.entity.EntityPersister persister = entry.getPersister();
+
+                                String[] propertyNames = persister.getPropertyNames();
+
+                                Object[] currentState = persister.getPropertyValues(entity);
+
+                                return buildSanitizedMap(
+                                                propertyNames,
+                                                currentState);
+                        }
+
+                        /*
+                         * EntityEntry does NOT exist.
+                         *
+                         * Do NOT call entry.getPersister().
+                         *
+                         * Get the persister from Hibernate SessionFactory instead.
+                         */
+                        log.debug(
+                                        "Audit: EntityEntry is null while capturing NEW state. Using EntityPersister fallback. Entity={}",
+                                        entity.getClass().getSimpleName());
+
+                        return captureStateUsingPersister(
+                                        session,
+                                        entity);
+
+                } catch (Exception ex) {
+
+                        log.error(
+                                        "Audit: Failed to capture NEW state for {}: {}",
+                                        entity.getClass().getSimpleName(),
+                                        ex.getMessage(),
+                                        ex);
+
+                        return new LinkedHashMap<>();
+                }
+        }
+
+        /**
+         * Fallback when EntityEntry is unavailable.
+         * <p>
+         * Hibernate's SessionFactory can resolve the EntityPersister
+         * directly from the entity's actual class.
+         */
+        private Map<String, Object> captureStateUsingPersister(
+                        SessionImplementor session,
+                        Object entity) {
+
+                try {
+
+                        org.hibernate.persister.entity.EntityPersister persister = session.getEntityPersister(
+                                        null,
+                                        entity);
+
+                        if (persister == null) {
+
+                                log.warn(
+                                                "Audit: Cannot resolve EntityPersister for {}",
+                                                entity.getClass().getName());
+
+                                return new LinkedHashMap<>();
+                        }
+
+                        String[] propertyNames = persister.getPropertyNames();
+
+                        Object[] currentState = persister.getPropertyValues(entity);
+
+                        return buildSanitizedMap(
+                                        propertyNames,
+                                        currentState);
+
+                } catch (Exception ex) {
+
+                        log.error(
+                                        "Audit: Failed to resolve EntityPersister for {}: {}",
+                                        entity.getClass().getName(),
+                                        ex.getMessage(),
+                                        ex);
+
+                        return new LinkedHashMap<>();
+                }
+        }
+
+        /**
+         * Remove sensitive fields and convert entity references
+         * into their IDs.
+         */
+        private Map<String, Object> buildSanitizedMap(
+                        String[] propertyNames,
+                        Object[] values) {
+
+                Map<String, Object> result = new LinkedHashMap<>();
+
+                if (propertyNames == null || values == null) {
+                        return result;
+                }
+
+                int length = Math.min(
+                                propertyNames.length,
+                                values.length);
+
+                for (int i = 0; i < length; i++) {
+
+                        String propertyName = propertyNames[i];
+
+                        if (propertyName == null) {
+                                continue;
+                        }
+
+                        /*
+                         * Never write sensitive data to audit log.
+                         */
+                        if (SENSITIVE_FIELDS.contains(propertyName)) {
+                                continue;
+                        }
+
+                        Object value = values[i];
+
+                        if (value == null) {
+
+                                result.put(
+                                                propertyName,
+                                                null);
+
+                        } else if (value instanceof Collection<?>) {
+
+                                /*
+                                 * Avoid huge recursive collections.
+                                 */
+                                continue;
+
+                        } else if (isEntityReference(value)) {
+
+                                result.put(
+                                                propertyName,
+                                                extractIdFromEntity(value));
+
+                        } else {
+
+                                result.put(
+                                                propertyName,
+                                                value);
+                        }
+                }
+
+                return result;
+        }
+
+        /**
+         * Check whether an object is a JPA entity.
+         */
+        private boolean isEntityReference(Object value) {
+
+                if (value == null) {
+                        return false;
+                }
+
+                Class<?> clazz = value.getClass();
+
+                /*
+                 * Hibernate proxy class may be generated dynamically.
+                 * Walk through the inheritance hierarchy.
+                 */
+                while (clazz != null && clazz != Object.class) {
+
+                        for (Field field : clazz.getDeclaredFields()) {
+
+                                if (field.isAnnotationPresent(Id.class)) {
+                                        return true;
+                                }
+                        }
+
+                        clazz = clazz.getSuperclass();
+                }
+
+                return false;
+        }
+
+        /**
+         * Extract entity ID.
+         */
+        private Object extractIdFromEntity(Object entity) {
+
+                if (entity == null) {
+                        return null;
+                }
+
+                /*
+                 * Try getId()
+                 */
+                try {
+
+                        Method getId = entity.getClass().getMethod("getId");
+
+                        return getId.invoke(entity);
+
+                } catch (Exception ignored) {
+                }
+
+                /*
+                 * Try record-style id()
+                 */
+                try {
+
+                        Method id = entity.getClass().getMethod("id");
+
+                        return id.invoke(entity);
+
+                } catch (Exception ignored) {
+                }
+
+                return null;
+        }
+
+        /**
+         * Save AuditLog.
+         * <p>
+         * Audit failure must NEVER break the business API.
+         */
+        private void saveAuditLog(
+                        Auditable auditable,
+                        UUID entityId,
+                        Map<String, Object> oldValue,
+                        Map<String, Object> newValue) {
+
+                try {
+
+                        User currentUser = getCurrentUser();
+
+                        AuditLog auditLog = AuditLog.builder()
+                                        .entityType(
+                                                        auditable.entityType())
+                                        .entityId(entityId)
+                                        .action(
+                                                        auditable.action())
+                                        .oldValue(
+                                                        oldValue != null
+                                                                        ? objectMapper.writeValueAsString(
+                                                                                        oldValue)
+                                                                        : null)
+                                        .newValue(
+                                                        newValue != null
+                                                                        ? objectMapper.writeValueAsString(
+                                                                                        newValue)
+                                                                        : null)
+                                        .performedById(
+                                                        currentUser.getId())
+                                        .module(
+                                                        auditable.module())
+                                        .build();
+
+                        auditLogRepository.save(auditLog);
+
+                } catch (Exception ex) {
+
+                        /*
+                         * Audit should not make the actual business operation fail.
+                         */
+                        log.error(
+                                        "Ghi Audit Log thất bại: {}",
+                                        ex.getMessage(),
+                                        ex);
+                }
+        }
+
+        /**
+         * Resolve authenticated user.
+         */
+        private User getCurrentUser() {
+
+                Authentication authentication = SecurityContextHolder
+                                .getContext()
+                                .getAuthentication();
+
+                if (authentication == null
+                                || !authentication.isAuthenticated()) {
+
+                        throw new IllegalStateException(
+                                        "Người dùng chưa được xác thực");
+                }
+
+                String username = authentication.getName();
+
+                return userRepository
+                                .findByUsername(username)
+                                .orElseThrow(
+                                                () -> new IllegalStateException(
+                                                                "Không tìm thấy người dùng: "
+                                                                                + username));
+        }
 }
