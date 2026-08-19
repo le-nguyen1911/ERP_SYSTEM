@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Component
@@ -152,6 +154,7 @@ public class DataInitializer implements CommandLineRunner {
                 "WAREHOUSE_CREATE",
                 "WAREHOUSE_UPDATE",
                 "WAREHOUSE_VIEW",
+                "WAREHOUSE_DELETE",
 
                 "PRODUCT_CREATE",
                 "PRODUCT_UPDATE",
@@ -205,15 +208,37 @@ public class DataInitializer implements CommandLineRunner {
         }
     }
 
-    private void createRole(String name, Set<String> permissionName) {
-        if (roleRepository.findByName(name).isEmpty()) {
-            Set<Permission> permissions = permissionRepository.findByNameIn(permissionName);
+    @Transactional
+    private void createRole(String name, Set<String> permissionNames) {
+        if (permissionNames == null || permissionNames.isEmpty()) {
+            return;
+        }
 
-            Role role = new Role();
-            role.setName(name);
-            role.setPermissions(permissions);
-            roleRepository.save(role);
-            log.info("Tạo role: {} với {} permission", name, permissions.size());
+        Set<Permission> targetPermissions = permissionRepository.findByNameIn(permissionNames);
+
+        Role role = roleRepository.findByName(name).orElseGet(() -> {
+            Role newRole = new Role();
+            newRole.setName(name);
+            newRole.setPermissions(new HashSet<>());
+            return newRole;
+        });
+
+        if (role.getPermissions() == null) {
+            role.setPermissions(new HashSet<>());
+        }
+
+        int previousSize = role.getPermissions().size();
+        role.getPermissions().addAll(targetPermissions);
+        int addedCount = role.getPermissions().size() - previousSize;
+
+        roleRepository.save(role);
+
+        if (role.getId() == null) {
+            log.info("Tạo mới role: {} với {} permission", name, targetPermissions.size());
+        } else if (addedCount > 0) {
+            log.info("Cập nhật bổ sung {} permission mới cho role: {}", addedCount, name);
+        } else {
+            log.debug("Role: {} đã có đủ các permission, không cần cập nhật", name);
         }
     }
 }

@@ -9,7 +9,11 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface NotificationService {
+
     NotificationResponse create(CreateNotificationRequest request);
+
+    java.util.Optional<NotificationResponse> createIfNotDuplicate(
+            CreateNotificationRequest request, long dedupeWindowHours);
 
     Page<NotificationResponse> getMyNotifications(UUID recipientId, Pageable pageable);
 

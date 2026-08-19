@@ -17,13 +17,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
 @Service
-@Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class NotificationServiceImpl implements NotificationService {
+
     private final NotificationRepository notificationRepository;
     private final NotificationMapper notificationMapper;
 
@@ -31,15 +33,47 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public NotificationResponse create(CreateNotificationRequest request) {
         Notification notification = notificationMapper.toEntity(request);
+
         if (notification.getType() == null) {
             notification.setType(NotificationType.INFO);
         }
         notification.setIsRead(false);
+
         Notification saved = notificationRepository.save(notification);
         log.info("Tạo thông báo thành công, id={}, recipientId={}, title={}",
                 saved.getId(), saved.getRecipientId(), saved.getTitle());
 
         return notificationMapper.toResponse(saved);
+    }
+
+
+    @Override
+    @Transactional
+    public Optional<NotificationResponse> createIfNotDuplicate(
+            CreateNotificationRequest request, long dedupeWindowHours) {
+
+        if (request.referenceType() == null || request.referenceId() == null) {
+            log.warn("createIfNotDuplicate() được gọi nhưng thiếu referenceType/referenceId, " +
+                    "bỏ qua kiểm tra trùng lặp và tạo bình thường");
+            return Optional.of(create(request));
+        }
+
+        LocalDateTime windowStart = LocalDateTime.now().minusHours(dedupeWindowHours);
+
+        boolean alreadyExists = notificationRepository
+                .existsByRecipientIdAndReferenceTypeAndReferenceIdAndIsReadFalseAndCreatedAtAfter(
+                        request.recipientId(), request.referenceType(),
+                        request.referenceId(), windowStart);
+
+        if (alreadyExists) {
+            log.debug("Bỏ qua tạo thông báo trùng lặp cho recipientId={}, reference={}/{} " +
+                            "(đã có thông báo chưa đọc trong {} giờ gần đây)",
+                    request.recipientId(), request.referenceType(),
+                    request.referenceId(), dedupeWindowHours);
+            return Optional.empty();
+        }
+
+        return Optional.of(create(request));
     }
 
     @Override
@@ -64,10 +98,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public NotificationResponse markAsRead(UUID id, UUID currentUserId) {
         Notification notification = notificationRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy thong báo với id={}", id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy thông báo với id: " + id));
+
         if (!notification.getRecipientId().equals(currentUserId)) {
-            throw new IllegalStateException(
-                    "Bạn không có quyền thao tác trên thông báo này");
+            throw new IllegalStateException("Bạn không có quyền thao tác trên thông báo này");
         }
 
         if (Boolean.FALSE.equals(notification.getIsRead())) {
@@ -93,9 +128,9 @@ public class NotificationServiceImpl implements NotificationService {
                         "Không tìm thấy thông báo với id: " + id));
 
         if (!notification.getRecipientId().equals(currentUserId)) {
-            throw new IllegalStateException(
-                    "Bạn không có quyền thao tác trên thông báo này");
+            throw new IllegalStateException("Bạn không có quyền thao tác trên thông báo này");
         }
+
         notificationRepository.delete(notification);
     }
 }
