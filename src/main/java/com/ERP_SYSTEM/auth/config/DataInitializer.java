@@ -21,6 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PermissionRepository permissionRepository;
 
     @Override
+    @Transactional
     public void run(String... args) {
 
 
