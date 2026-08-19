@@ -47,7 +47,7 @@ public class UnitController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('UNIT_CREATE')")
+    @PreAuthorize("hasAuthority('UNIT_DELETE')")
     public ResponseEntity<ApiResponse<UnitResponse>> deleteUnit(@PathVariable UUID id) {
         unitService.delete(id);
         return ResponseEntity.ok(ApiResponse.success("Xoá Thành công", null));

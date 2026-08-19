@@ -44,6 +44,7 @@ public class DataInitializer implements CommandLineRunner {
         createPermission("WAREHOUSE_CREATE", "Tạo kho");
         createPermission("WAREHOUSE_UPDATE", "Cập nhật kho");
         createPermission("WAREHOUSE_VIEW", "Xem kho");
+        createPermission("WAREHOUSE_DELETE", "Xoá kho");
 
         // PRODUCT
         createPermission("PRODUCT_CREATE", "Tạo sản phẩm");

@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("api/v1/stocks")
+@RequestMapping("/api/v1/stocks")
 @RequiredArgsConstructor
 public class StockController {
     private final StockService stockService;

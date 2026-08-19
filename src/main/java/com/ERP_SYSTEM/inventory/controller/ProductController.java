@@ -52,7 +52,7 @@ public class ProductController {
         return ResponseEntity.ok(ApiResponse.success("Tạo sản phẩm thành công", productService.create(request)));
     }
 
-    @PutMapping
+    @PutMapping("/{id}")
     @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
     public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(@PathVariable UUID id, @Valid @RequestBody UpdateProductRequest request) {
         return ResponseEntity.ok(ApiResponse.success("Cập nhật sản phẩm thành công", productService.update(id, request)));

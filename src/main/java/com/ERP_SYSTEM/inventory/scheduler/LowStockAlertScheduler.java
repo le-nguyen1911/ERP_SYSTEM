@@ -1,6 +1,5 @@
 package com.ERP_SYSTEM.inventory.scheduler;
 
-// Scheduled Job riêng, đặt trong 1 class mới nhỏ gọn:
 
 import com.ERP_SYSTEM.inventory.dto.response.ProductStockResponse;
 import com.ERP_SYSTEM.inventory.event.LowStockDetectedEvent;
@@ -19,7 +18,7 @@ public class LowStockAlertScheduler {
     private final StockService stockService;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Scheduled(cron = "0 0 * * * *") // mỗi giờ đúng phút 0
+    @Scheduled(cron = "0 0 * * * *")
     public void checkLowStockPeriodically() {
         List<ProductStockResponse> lowStocks = stockService.getLowStockAlerts();
         for (ProductStockResponse stock : lowStocks) {
