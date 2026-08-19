@@ -24,7 +24,6 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
 
-
         // USER
         createPermission("USER_CREATE", "Tạo người dùng");
         createPermission("USER_UPDATE", "Cập nhật người dùng");
@@ -62,19 +61,18 @@ public class DataInitializer implements CommandLineRunner {
         createPermission("STOCK_VIEW", "Xem tồn kho");
         createPermission("STOCK_UPDATE", "Cập nhật tồn kho");
 
-
-        //SUPPLIER
+        // SUPPLIER
         createPermission("SUPPLIER_CREATE", "Tạo nhà cung cấp");
         createPermission("SUPPLIER_UPDATE", "Cập nhật nhà cung cấp");
         createPermission("SUPPLIER_VIEW", "Xem nhà cung cấp");
 
-        //PURCHASE ORDER
+        // PURCHASE ORDER
         createPermission("PURCHASE_CREATE", "Tạo đơn đặt hàng");
         createPermission("PURCHASE_UPDATE", "Cập nhật đơn đặt hàng");
         createPermission("PURCHASE_APPROVE", "Duyệt đơn đặt hàng");
         createPermission("PURCHASE_CANCEL", "Hủy đơn đặt hàng");
 
-        //GOODS RECEIPT
+        // GOODS RECEIPT
         createPermission("GOODS_RECEIPT_CREATE", "Tạo phiếu nhận hàng");
         createPermission("GOODS_RECEIPT_VIEW", "Xem phiếu nhận hàng");
         createPermission("GOODS_RECEIPT_IMPORT", "Nhập kho từ phiếu nhận hàng");
@@ -99,15 +97,13 @@ public class DataInitializer implements CommandLineRunner {
         // REPORT
         createPermission("REPORT_VIEW", "Xem báo cáo");
 
-
         // ROLE USER
         createRole("USER", Set.of(
                 "CATEGORY_VIEW",
                 "UNIT_VIEW",
                 "WAREHOUSE_VIEW",
                 "PRODUCT_VIEW",
-                "STOCK_VIEW"
-        ));
+                "STOCK_VIEW"));
 
         // ROLE MANAGER
         createRole("MANAGER", Set.of(
@@ -132,8 +128,7 @@ public class DataInitializer implements CommandLineRunner {
                 "STOCK_TRANSFER",
                 "STOCK_VIEW",
                 "STOCK_UPDATE",
-                "REPORT_VIEW"
-        ));
+                "REPORT_VIEW"));
 
         // ROLE ADMIN
         createRole("ADMIN", Set.of(
@@ -195,8 +190,7 @@ public class DataInitializer implements CommandLineRunner {
                 "DELIVERY_VIEW",
                 "DELIVERY_EXPORT",
 
-                "REPORT_VIEW"
-        ));
+                "REPORT_VIEW"));
     }
 
     private void createPermission(String name, String description) {
