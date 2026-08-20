@@ -84,6 +84,9 @@ public class ProductServiceImpl implements ProductService {
                     .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn vị"));
             product.setUnit(unit);
         }
+        if (request.active() != null) {
+            product.setActive(request.active());
+        }
         productMapper.updateProductFromRequest(request, product);
         productRepository.save(product);
         return productMapper.toProductResponse(product);
@@ -133,15 +136,33 @@ public class ProductServiceImpl implements ProductService {
     public ProductResponse deactivate(UUID id) {
         Product product = findProductById(id);
         if (!product.getActive()) {
-            throw new RuntimeException("Sản phẩm" + product.getName() + "Đang ở trạng thái ngừng kinh doanh");
+            throw new RuntimeException("Sản phẩm " + product.getName() + " đang ở trạng thái ngừng kinh doanh");
         }
         product.setActive(false);
         productRepository.save(product);
         return productMapper.toProductResponse(product);
     }
 
+    @Auditable(
+            entityClass = Product.class,
+            entityType = "Product",
+            action = AuditAction.STATUS_CHANGE,
+            module = SourceModule.INVENTORY
+    )
+    @Override
+    @Transactional
+    public ProductResponse activate(UUID id) {
+        Product product = findProductById(id);
+        if (product.getActive()) {
+            throw new RuntimeException("Sản phẩm " + product.getName() + " đang ở trạng thái kinh doanh");
+        }
+        product.setActive(true);
+        productRepository.save(product);
+        return productMapper.toProductResponse(product);
+    }
+
     private Product findProductById(UUID id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm tháy sản phẩm"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
     }
 }

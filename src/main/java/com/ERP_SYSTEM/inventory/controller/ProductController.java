@@ -24,13 +24,19 @@ public class ProductController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('PRODUCT_VIEW')")
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.success(productService.getAll(pageable)));
+    }
+
+    @GetMapping("/active")
+    @PreAuthorize("hasAuthority('PRODUCT_VIEW')")
     public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProductsActive(Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(productService.getByActive(pageable)));
     }
 
     @GetMapping("/search")
     @PreAuthorize("hasAuthority('PRODUCT_VIEW')")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getSearchProducts(String search, Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getSearchProducts(@RequestParam(required = false) String search, Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.success(productService.search(search, pageable)));
     }
 
@@ -63,5 +69,12 @@ public class ProductController {
     public ResponseEntity<ApiResponse<ProductResponse>> deactivateProduct(@PathVariable UUID id) {
         productService.deactivate(id);
         return ResponseEntity.ok(ApiResponse.success("Vô hiệu hóa sản phẩm", null));
+    }
+
+    @PatchMapping("/{id}/activate")
+    @PreAuthorize("hasAuthority('PRODUCT_UPDATE')")
+    public ResponseEntity<ApiResponse<ProductResponse>> activateProduct(@PathVariable UUID id) {
+        productService.activate(id);
+        return ResponseEntity.ok(ApiResponse.success("Kích hoạt lại sản phẩm", null));
     }
 }

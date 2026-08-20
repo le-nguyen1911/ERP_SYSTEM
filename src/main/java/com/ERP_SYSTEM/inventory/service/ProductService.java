@@ -25,4 +25,6 @@ public interface ProductService {
     Page<ProductResponse> search(String search, Pageable pageable);
 
     ProductResponse deactivate(UUID id);
+
+    ProductResponse activate(UUID id);
 }
