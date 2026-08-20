@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.audit.aspect;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.AuditLog;
+import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
 import com.ERP_SYSTEM.audit.repository.AuditLogRepository;
 import com.ERP_SYSTEM.auth.entity.User;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
@@ -72,12 +73,12 @@ public class AuditAspect {
 
                 /*
                  * ============================================================
-                 * 2. Capture OLD state
+                 * 2. Capture OLD state (for UPDATE, DELETE, etc.)
                  * ============================================================
                  */
                 Map<String, Object> oldValueSnapshot = null;
 
-                if (entityId != null) {
+                if (auditable.action() != AuditAction.CREATE && entityId != null) {
 
                         Object entityBeforeProceed = entityManager.find(
                                         auditable.entityClass(),
@@ -85,7 +86,14 @@ public class AuditAspect {
 
                         if (entityBeforeProceed != null) {
 
-                                oldValueSnapshot = captureLoadedState(entityBeforeProceed);
+                                if (auditable.action() == AuditAction.DELETE) {
+                                        oldValueSnapshot = captureCurrentState(entityBeforeProceed);
+                                        if (oldValueSnapshot == null || oldValueSnapshot.isEmpty()) {
+                                                oldValueSnapshot = captureLoadedState(entityBeforeProceed);
+                                        }
+                                } else {
+                                        oldValueSnapshot = captureLoadedState(entityBeforeProceed);
+                                }
 
                         } else {
 
@@ -114,12 +122,12 @@ public class AuditAspect {
 
                 /*
                  * ============================================================
-                 * 5. Capture NEW state
+                 * 5. Capture NEW state (skip for DELETE)
                  * ============================================================
                  */
                 Map<String, Object> newValueSnapshot = null;
 
-                if (finalEntityId != null) {
+                if (auditable.action() != AuditAction.DELETE && finalEntityId != null) {
 
                         Object entityAfterProceed = entityManager.find(
                                         auditable.entityClass(),
@@ -590,6 +598,10 @@ public class AuditAspect {
                         Map<String, Object> newValue) {
 
                 try {
+                        if (entityId == null) {
+                                log.warn("Audit: entityId is null, skipping audit log for {}", auditable.entityType());
+                                return;
+                        }
 
                         User currentUser = getCurrentUser();
 

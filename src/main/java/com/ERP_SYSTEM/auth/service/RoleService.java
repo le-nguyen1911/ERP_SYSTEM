@@ -9,16 +9,18 @@ import java.util.UUID;
 
 public interface RoleService {
     RoleResponse createRole(CreateRoleRequest request);
-    // Tạo role mới với danh sách permission
+
+    RoleResponse updateRole(UUID id, CreateRoleRequest request);
+
+    void deleteRole(UUID id);
 
     RoleResponse addPermissionsToRole(UUID id, Set<String> permissions);
-    // Thêm permission vào role đã có
 
     RoleResponse removePermissionsFromRole(UUID id, Set<String> permissions);
-    // Xóa permission khỏi role
+
+    RoleResponse setPermissionsForRole(UUID id, Set<String> permissions);
 
     List<RoleResponse> getAllRoles();
-    // Lấy danh sách tất cả role + permissions của mỗi role
 
     RoleResponse getRoleById(UUID id);
 }

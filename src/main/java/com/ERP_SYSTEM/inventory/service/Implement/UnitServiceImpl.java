@@ -94,18 +94,13 @@ public class UnitServiceImpl implements UnitService {
     public void delete(UUID id) {
         Unit unit = findUnitById(id);
         boolean hasProducts = unitRepository.existsProductById(id);
-        if (!unit.getName().isEmpty()) {
-            throw new RuntimeException("Đơn vị không được tìm thấy");
-        }
         if (hasProducts) {
             throw new RuntimeException(
-                    "Không thể xóa đơn vị tính đang được "
-                            + "sử dụng bởi sản phẩm."
+                    "Không thể xóa đơn vị tính đang được sử dụng bởi sản phẩm."
             );
         }
 
         unitRepository.delete(unit);
-
     }
 
     private Unit findUnitById(UUID id) {
