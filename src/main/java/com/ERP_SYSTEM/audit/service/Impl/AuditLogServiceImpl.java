@@ -22,6 +22,12 @@ public class AuditLogServiceImpl implements AuditLogService {
     private final AuditLogRepository auditLogRepository;
 
     @Override
+    public Page<AuditLogResponse> getAll(Pageable pageable) {
+        return auditLogRepository.findAllByOrderByCreatedAtDesc(pageable)
+                .map(this::toResponse);
+    }
+
+    @Override
     public Page<AuditLogResponse> getByEntity(String entityType, UUID entityId, Pageable pageable) {
         return auditLogRepository
                 .findByEntityTypeAndEntityIdOrderByCreatedAtDesc(entityType, entityId, pageable)

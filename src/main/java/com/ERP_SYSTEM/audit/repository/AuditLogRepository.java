@@ -11,6 +11,8 @@ import java.util.UUID;
 
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
+    Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
     Page<AuditLog> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(
             String entityType, UUID entityId, Pageable pageable);
 
@@ -18,3 +20,4 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, UUID> {
 
     Page<AuditLog> findByModuleOrderByCreatedAtDesc(SourceModule module, Pageable pageable);
 }
+

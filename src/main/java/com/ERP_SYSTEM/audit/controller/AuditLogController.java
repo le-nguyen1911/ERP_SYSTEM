@@ -20,6 +20,18 @@ import java.util.UUID;
 public class AuditLogController {
     private final AuditLogService auditLogService;
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<AuditLogResponse>>> getAll(
+            @RequestParam(required = false) SourceModule module,
+            Pageable pageable) {
+        if (module != null) {
+            return ResponseEntity.ok(ApiResponse.success(
+                    auditLogService.getByModule(module, pageable)));
+        }
+        return ResponseEntity.ok(ApiResponse.success(
+                auditLogService.getAll(pageable)));
+    }
+
     @GetMapping("/by-entity")
     public ResponseEntity<ApiResponse<Page<AuditLogResponse>>> getByEntity(
             @RequestParam String entityType,

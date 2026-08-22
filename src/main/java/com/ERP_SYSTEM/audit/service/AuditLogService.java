@@ -9,6 +9,8 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface AuditLogService {
+    Page<AuditLogResponse> getAll(Pageable pageable);
+
     Page<AuditLogResponse> getByEntity(String entityType, UUID entityId, Pageable pageable);
 
     Page<AuditLogResponse> getByUser(UUID performedById, Pageable pageable);
@@ -18,3 +20,4 @@ public interface AuditLogService {
     void logSystemEvent(String entityType, UUID entityId, AuditAction action,
                         UUID performedById, SourceModule module, String description);
 }
+
