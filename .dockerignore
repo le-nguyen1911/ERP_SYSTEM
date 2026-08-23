@@ -1,0 +1,17 @@
+# .dockerignore
+.gradle
+.idea
+.github
+build
+bin
+out
+*.log
+*.iml
+.git
+.gitignore
+.gitattributes
+HELP.md
+README.md
+PROJECT_OVERVIEW.md
+test
+src/test
