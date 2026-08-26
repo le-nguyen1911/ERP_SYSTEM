@@ -30,7 +30,8 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
     @Query("""
             SELECT s FROM Supplier s
             WHERE s.isDeleted = false
-            AND (:keyword IS NULL
+            AND (
+                 :keyword = ''
                  OR LOWER(s.supplierName) LIKE LOWER(CONCAT('%', :keyword, '%'))
                  OR LOWER(s.supplierCode) LIKE LOWER(CONCAT('%', :keyword, '%')))
             AND (:status IS NULL OR s.status = :status)
@@ -39,7 +40,7 @@ public interface SupplierRepository extends JpaRepository<Supplier, UUID> {
             @Param("keyword") String keyword,
             @Param("status") SupplierStatus status,
             Pageable pageable);
-    
+
     @Query("""
             SELECT CASE WHEN COUNT(po) > 0 THEN true ELSE false END
             FROM PurchaseOrder po

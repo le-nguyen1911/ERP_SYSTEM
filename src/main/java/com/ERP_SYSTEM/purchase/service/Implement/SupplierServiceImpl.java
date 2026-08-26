@@ -98,8 +98,9 @@ public class SupplierServiceImpl implements SupplierService {
     @Override
     @Transactional(readOnly = true)
     public Page<SupplierResponse> search(SupplierSearchRequest searchRequest, Pageable pageable) {
+        String keyword = searchRequest.keyword() == null ? "" : searchRequest.keyword();
         return supplierRepository.searchSuppliers(
-                        searchRequest.keyword(),
+                        keyword,
                         searchRequest.status(),
                         pageable)
                 .map(supplierMapper::toResponse);

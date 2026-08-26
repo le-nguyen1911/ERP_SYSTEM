@@ -103,8 +103,9 @@ public class CustomerServiceImpl implements CustomerService {
     @Transactional(readOnly = true)
     public Page<CustomerResponse> search(CustomerSearchRequest request, Pageable pageable) {
 
+        String keyword = request.keyword() == null ? "" : request.keyword();
         return customerRepository.searchCustomers(
-                        request.keyword(),
+                        keyword,
                         request.status(),
                         pageable
                 )

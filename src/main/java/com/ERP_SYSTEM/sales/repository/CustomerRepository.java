@@ -29,9 +29,11 @@ public interface CustomerRepository extends JpaRepository<Customer, UUID> {
     @Query("""
             SELECT c FROM Customer c
             WHERE c.isDeleted = false
-            AND (:keyword IS NULL
-                 OR LOWER(c.customerName) LIKE LOWER(CONCAT('%', :keyword, '%'))
-                 OR LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :keyword, '%')))
+            AND (
+                :keyword = ''
+                OR LOWER(c.customerName) LIKE LOWER(CONCAT('%', :keyword, '%'))
+                OR LOWER(c.customerCode) LIKE LOWER(CONCAT('%', :keyword, '%'))
+            )
             AND (:status IS NULL OR c.status = :status)
             """)
     Page<Customer> searchCustomers(
