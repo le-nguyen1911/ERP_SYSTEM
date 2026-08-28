@@ -35,6 +35,15 @@ public class NotificationController {
                 .body(ApiResponse.success("Tạo thông báo thành công", response));
     }
 
+    @GetMapping
+    public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyNotifications(
+            Authentication authentication, Pageable pageable) {
+        UUID userId = getCurrentUser().getId();
+        Page<NotificationResponse> response =
+                notificationService.getMyNotifications(userId, pageable);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @GetMapping("/unread")
     public ResponseEntity<ApiResponse<Page<NotificationResponse>>> getMyUnreadNotifications(
             Authentication authentication, Pageable pageable) {
