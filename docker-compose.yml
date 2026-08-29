@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:14-alpine
@@ -14,7 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U admin -d erp_system" ]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
@@ -26,11 +24,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-
+      # Sửa cổng từ 5434 thành 5432
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/erp_system
       SPRING_DATASOURCE_USERNAME: admin
       SPRING_DATASOURCE_PASSWORD: 123456
-
       JWT_SECRET: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
     depends_on:
       postgres:
