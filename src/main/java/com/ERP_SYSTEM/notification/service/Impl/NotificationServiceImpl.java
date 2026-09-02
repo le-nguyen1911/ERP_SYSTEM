@@ -13,7 +13,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -30,7 +32,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationMapper notificationMapper;
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public NotificationResponse create(CreateNotificationRequest request) {
         Notification notification = notificationMapper.toEntity(request);
 
@@ -48,7 +50,7 @@ public class NotificationServiceImpl implements NotificationService {
 
 
     @Override
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Optional<NotificationResponse> createIfNotDuplicate(
             CreateNotificationRequest request, long dedupeWindowHours) {
 
@@ -102,7 +104,7 @@ public class NotificationServiceImpl implements NotificationService {
                         "Không tìm thấy thông báo với id: " + id));
 
         if (!notification.getRecipientId().equals(currentUserId)) {
-            throw new IllegalStateException("Bạn không có quyền thao tác trên thông báo này");
+            throw new AccessDeniedException("Bạn không có quyền thao tác trên thông báo này");
         }
 
         if (Boolean.FALSE.equals(notification.getIsRead())) {
@@ -128,7 +130,7 @@ public class NotificationServiceImpl implements NotificationService {
                         "Không tìm thấy thông báo với id: " + id));
 
         if (!notification.getRecipientId().equals(currentUserId)) {
-            throw new IllegalStateException("Bạn không có quyền thao tác trên thông báo này");
+            throw new AccessDeniedException("Bạn không có quyền thao tác trên thông báo này");
         }
 
         notificationRepository.delete(notification);

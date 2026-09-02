@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ public class LowStockAlertScheduler {
     private final ApplicationEventPublisher eventPublisher;
 
     @Scheduled(cron = "0 0 * * * *")
+    @Transactional(readOnly = true)
     public void checkLowStockPeriodically() {
         List<ProductStockResponse> lowStocks = stockService.getLowStockAlerts();
         for (ProductStockResponse stock : lowStocks) {

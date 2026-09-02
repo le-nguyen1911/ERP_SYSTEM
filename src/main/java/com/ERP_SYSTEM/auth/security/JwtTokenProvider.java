@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtTokenProvider {
@@ -46,22 +47,42 @@ public class JwtTokenProvider {
 
     public String generateAccessToken(UserDetails userDetails) {
         return buildToken(
-                userDetails.getUsername(), "access", accessTokenExpiration);
+                userDetails.getUsername(), "access", null, accessTokenExpiration);
+    }
+
+    public String generateAccessToken(UserDetails userDetails, UUID sessionId) {
+        return buildToken(
+                userDetails.getUsername(), "access", sessionId, accessTokenExpiration);
     }
 
 
-    public String buildToken(String username, String type, long expiration) {
-        return Jwts.builder()
+    public String buildToken(String username, String type, UUID sessionId, long expiration) {
+        var builder = Jwts.builder()
                 .subject(username)
                 .claim("type", type)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey())
-                .compact();
+                .signWith(getSigningKey());
+
+        if (sessionId != null) {
+            builder.claim("sid", sessionId.toString());
+        }
+
+        return builder.compact();
     }
 
     public String getUsernameFromToken(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    public String getSessionIdFromToken(String token) {
+        Object sid = parseClaims(token).get("sid");
+        return sid != null ? sid.toString() : null;
+    }
+
+    public String getTokenType(String token) {
+        Object type = parseClaims(token).get("type");
+        return type != null ? type.toString() : null;
     }
 
     public boolean validateToken(String token) {
@@ -85,3 +106,4 @@ public class JwtTokenProvider {
                 .getPayload();
     }
 }
+

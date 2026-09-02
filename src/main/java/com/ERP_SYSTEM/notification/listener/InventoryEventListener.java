@@ -27,7 +27,7 @@ public class InventoryEventListener {
     private final NotificationService notificationService;
     private final UserRepository userRepository;
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onLowStockDetected(LowStockDetectedEvent event) {
         log.info("Nhận sự kiện cảnh báo tồn kho thấp: product={}, warehouse={}, quantity={}/{}",
                 event.productName(), event.warehouseId(),

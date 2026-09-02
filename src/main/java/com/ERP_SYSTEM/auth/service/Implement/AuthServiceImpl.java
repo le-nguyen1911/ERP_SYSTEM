@@ -131,28 +131,29 @@ public class AuthServiceImpl implements AuthService {
         if (jwtTokenProvider.isRefreshTokenRotationEnabled()) {
             refreshToken.setRevoked(true);
             refreshToken.setExpiresAt(LocalDateTime.now());
-            refreshToken.setRevokedReason("TOKEN_RONATION");
+            refreshToken.setRevokedReason("TOKEN_ROTATION");
             refreshTokenRepository.save(refreshToken);
         }
 
-        String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails);
-        String newRefreshToken = jwtTokenProvider.generateRefreshTokenValue();
-        saveRefreshToken(user, newRefreshToken, refreshToken.getDeviceInfo());
+        String newRefreshTokenValue = jwtTokenProvider.generateRefreshTokenValue();
+        RefreshToken newSavedSession = saveRefreshToken(user, newRefreshTokenValue, refreshToken.getDeviceInfo());
+        String newAccessToken = jwtTokenProvider.generateAccessToken(userDetails, newSavedSession.getId());
 
         return AuthResponse.builder()
                 .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
+                .refreshToken(newRefreshTokenValue)
                 .tokenType("Bearer")
                 .user(userMapper.toUserInfoResponse(user))
                 .build();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserInfoResponse getMe(String username) {
 
         //tìm user trong DB
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Không tìm  thấy user"));
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy user"));
 
         //MapStruct tự convert User → UserInfoResponse
         return userMapper.toUserInfoResponse(user);
@@ -163,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
     public void logout(String TokenValue) {
         RefreshToken refreshToken = refreshTokenRepository
                 .findByToken(TokenValue)
-                .orElseThrow(() -> new RuntimeException("Token không ồn tại"));
+                .orElseThrow(() -> new RuntimeException("Token không tồn tại"));
 
         refreshToken.setRevoked(true);
         refreshToken.setRevokedAt(LocalDateTime.now());
@@ -223,11 +224,11 @@ public class AuthServiceImpl implements AuthService {
 
     private AuthResponse buildAuthResponse(UserDetails userDetails,
                                            User user, String deviceInfo) {
-        String accessToken = jwtTokenProvider.generateAccessToken(userDetails);
-
         String refreshTokenValue = jwtTokenProvider.generateRefreshTokenValue();
 
-        saveRefreshToken(user, refreshTokenValue, deviceInfo);
+        RefreshToken savedSession = saveRefreshToken(user, refreshTokenValue, deviceInfo);
+
+        String accessToken = jwtTokenProvider.generateAccessToken(userDetails, savedSession.getId());
 
         return AuthResponse.builder()
                 .accessToken(accessToken)
@@ -241,7 +242,7 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    private void saveRefreshToken(User user, String refreshTokenValue, String deviceInfo) {
+    private RefreshToken saveRefreshToken(User user, String refreshTokenValue, String deviceInfo) {
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(refreshTokenValue)
                 .user(user)
@@ -252,7 +253,7 @@ public class AuthServiceImpl implements AuthService {
                 )
                 .revoked(false)
                 .build();
-        refreshTokenRepository.save(refreshToken);
+        return refreshTokenRepository.save(refreshToken);
 
     }
 }

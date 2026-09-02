@@ -18,6 +18,8 @@ public interface RefreshTokenRepository
 
     Optional<RefreshToken> findByToken(String token);
 
+    @Query("SELECT rt FROM RefreshToken rt JOIN FETCH rt.user WHERE rt.id = :id")
+    Optional<RefreshToken> findByIdWithUser(@Param("id") UUID id);
 
     List<RefreshToken> findByUserIdAndRevokedFalse(UUID userId);
 
