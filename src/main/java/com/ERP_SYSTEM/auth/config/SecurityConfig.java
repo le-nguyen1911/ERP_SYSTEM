@@ -36,6 +36,8 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final UserDetailsServiceImpl userDetailsService;
 
+    private final RateLimitFilter rateLimitFilter;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -54,16 +56,13 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint())
                 )
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    /**
-     * AuthenticationEntryPoint: Được gọi khi request không có authentication hợp lệ.
-     * Trả về HTTP 401 Unauthorized với JSON body chuẩn.
-     * Điều này đảm bảo revoked session → 401, không phải 403.
-     */
+
     @Bean
     public AuthenticationEntryPoint jwtAuthenticationEntryPoint() {
         return (request, response, authException) -> {
@@ -85,8 +84,12 @@ public class SecurityConfig {
         configuration.setAllowedOrigins(List.of("http://localhost:5173", "https://erp-system-zeta-lime.vercel.app"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With", "Refresh-Token"));
-        configuration.setAllowCredentials(true);
-        configuration.setExposedHeaders(List.of("Authorization"));
+        configuration.setExposedHeaders(List.of(
+                "Authorization",
+                "X-RateLimit-Limit",
+                "X-RateLimit-Remaining",
+                "Retry-After"
+        ));
         configuration.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
