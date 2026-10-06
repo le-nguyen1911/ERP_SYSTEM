@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://stg-postgres:5432/erp_system_stg}
+    username: ${SPRING_DATASOURCE_USERNAME:stg_admin}
+    password: ${SPRING_DATASOURCE_PASSWORD:stg_password}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
