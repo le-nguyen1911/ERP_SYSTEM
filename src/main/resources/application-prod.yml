@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://prod-postgres:5432/erp_system_prod}
+    url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
     driver-class-name: org.postgresql.Driver
@@ -12,3 +12,26 @@ spring:
     properties:
       hibernate:
         format_sql: false
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 2s
+      connect-timeout: 2s
+      lettuce:
+        shutdown-timeout: 100ms
+
+app:
+  cache:
+    enabled: ${APP_CACHE_ENABLED:false}
+
+  cors:
+    allowed-origins: ${APP_CORS_ALLOWED_ORIGINS}
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN

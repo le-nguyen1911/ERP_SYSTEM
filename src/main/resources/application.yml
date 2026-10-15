@@ -3,7 +3,7 @@ spring:
     name: ERP_SYSTEM
 
   profiles:
-    active: dev
+    default: dev
 
   jpa:
     hibernate:
@@ -12,14 +12,18 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        format-sql: true
+        format_sql: false
         default_batch_fetch_size: 100
-    show-sql: true
+    show-sql: false
+
   flyway:
-    enable: true
+    enabled: true
+
+server:
+  port: ${PORT:8080}
 
 jwt:
-  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  secret: ${JWT_SECRET}
   access-token-expiration: 900000
   refresh-token-expiration: 604800000
   refresh-token-rotation: true
