@@ -3,7 +3,6 @@ app:
     enabled: ${APP_CACHE_ENABLED:true}
 
 spring:
-  # ===== REDIS =====
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -14,14 +13,12 @@ spring:
       lettuce:
         shutdown-timeout: 100ms
 
-  # ===== DATABASE (POSTGRESQL) =====
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/erp_system}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
     password: ${SPRING_DATASOURCE_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
-  # ===== JPA / HIBERNATE =====
   jpa:
     show-sql: true
     hibernate:
@@ -29,3 +26,6 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+jwt:
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
