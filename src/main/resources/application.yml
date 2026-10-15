@@ -1,8 +1,11 @@
+server:
+  port: ${PORT:8080}
+
 spring:
   application:
     name: ERP_SYSTEM
 
-  
+
   profiles:
     active: dev
 
