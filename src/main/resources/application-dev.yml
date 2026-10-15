@@ -1,13 +1,27 @@
+app:
+  cache:
+    enabled: ${APP_CACHE_ENABLED:true}
+
 spring:
-  redis:
-    host: localhost
-    port: 6379
+  # ===== REDIS =====
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 1000ms
+      connect-timeout: 1000ms
+      lettuce:
+        shutdown-timeout: 100ms
+
+  # ===== DATABASE (POSTGRESQL) =====
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/erp_system}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
     password: ${SPRING_DATASOURCE_PASSWORD:123456}
     driver-class-name: org.postgresql.Driver
 
+  # ===== JPA / HIBERNATE =====
   jpa:
     show-sql: true
     hibernate:

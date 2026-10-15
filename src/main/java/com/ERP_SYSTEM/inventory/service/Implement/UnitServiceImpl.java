@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.inventory.service.Implement;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.common.cache.CacheNames;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateUnitRequest;
@@ -12,6 +13,9 @@ import com.ERP_SYSTEM.inventory.repository.UnitRepository;
 import com.ERP_SYSTEM.inventory.service.UnitService;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +37,7 @@ public class UnitServiceImpl implements UnitService {
             module = SourceModule.INVENTORY,
             idExpression = "#result.id"
     )
+    @CacheEvict(value = CacheNames.UNITS, allEntries = true)
     @Override
     @Transactional
     public UnitResponse create(CreateUnitRequest request) {
@@ -53,6 +58,10 @@ public class UnitServiceImpl implements UnitService {
             action = AuditAction.UPDATE,
             module = SourceModule.INVENTORY
     )
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.UNITS, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
+    })
     @Override
     @Transactional
     public UnitResponse update(UUID id, CreateUnitRequest request) {
@@ -68,12 +77,14 @@ public class UnitServiceImpl implements UnitService {
         return productMapper.toUnitResponse(unit);
     }
 
+    @Cacheable(value = CacheNames.UNITS, key = "#id")
     @Override
     @Transactional(readOnly = true)
     public UnitResponse getById(UUID id) {
         return productMapper.toUnitResponse(findUnitById(id));
     }
 
+    @Cacheable(value = CacheNames.UNITS, key = "'all'")
     @Override
     @Transactional(readOnly = true)
     public List<UnitResponse> getAll() {
@@ -89,6 +100,7 @@ public class UnitServiceImpl implements UnitService {
             action = AuditAction.DELETE,
             module = SourceModule.INVENTORY
     )
+    @CacheEvict(value = CacheNames.UNITS, allEntries = true)
     @Override
     @Transactional
     public void delete(UUID id) {

@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.sales.service.Impl;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.common.cache.CacheNames;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
@@ -18,6 +19,8 @@ import com.ERP_SYSTEM.sales.repository.SalesOrderRepository;
 import com.ERP_SYSTEM.sales.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -83,6 +86,7 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(customer);
     }
 
+    @Cacheable(value = CacheNames.CUSTOMERS, key = "#id")
     @Override
     @Transactional(readOnly = true)
     public CustomerResponse findById(UUID id) {
@@ -92,6 +96,10 @@ public class CustomerServiceImpl implements CustomerService {
         return customerMapper.toResponse(customer);
     }
 
+    @Cacheable(
+            value = CacheNames.CUSTOMERS,
+            key = "'all:' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort"
+    )
     @Override
     @Transactional(readOnly = true)
     public Page<CustomerResponse> getAll(Pageable pageable) {
@@ -119,6 +127,7 @@ public class CustomerServiceImpl implements CustomerService {
             module = SourceModule.SALES
 
     )
+    @CacheEvict(value = CacheNames.CUSTOMERS, key = "#id")
     @Override
     @Transactional
     public void delete(UUID id) {

@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.inventory.service.Implement;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.common.cache.CacheNames;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateCategoryRequest;
@@ -12,6 +13,9 @@ import com.ERP_SYSTEM.inventory.repository.CategoryRepository;
 import com.ERP_SYSTEM.inventory.service.CategoryService;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +38,7 @@ public class CategoryServiceImpl implements CategoryService {
             module = SourceModule.INVENTORY,
             idExpression = "#result.id"
     )
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     @Override
     @Transactional
     public CategoryResponse create(CreateCategoryRequest request) {
@@ -53,6 +58,10 @@ public class CategoryServiceImpl implements CategoryService {
             entityType = "Category",
             action = AuditAction.UPDATE,
             module = SourceModule.INVENTORY)
+    @Caching(evict = {
+            @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true),
+            @CacheEvict(value = CacheNames.PRODUCTS, allEntries = true)
+    })
     @Override
     @Transactional
     public CategoryResponse update(UUID id, CreateCategoryRequest request) {
@@ -68,12 +77,14 @@ public class CategoryServiceImpl implements CategoryService {
         return productMapper.toCategoryResponse(category);
     }
 
+    @Cacheable(value = CacheNames.CATEGORIES, key = "#id")
     @Override
     @Transactional(readOnly = true)
     public CategoryResponse getById(UUID id) {
         return productMapper.toCategoryResponse(findCategoryById(id));
     }
 
+    @Cacheable(value = CacheNames.CATEGORIES, key = "'all'")
     @Override
     @Transactional(readOnly = true)
     public List<CategoryResponse> getAll() {
@@ -89,6 +100,7 @@ public class CategoryServiceImpl implements CategoryService {
             action = AuditAction.DELETE,
             module = SourceModule.INVENTORY
     )
+    @CacheEvict(value = CacheNames.CATEGORIES, allEntries = true)
     @Override
     @Transactional
     public void delete(UUID id) {

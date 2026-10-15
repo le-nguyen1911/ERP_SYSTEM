@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.common.exception;
 
 import com.ERP_SYSTEM.common.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -134,6 +135,15 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.CONFLICT) // 409
                 .body(ApiResponse.error(
                         "Đơn hàng vừa được cập nhật bởi người khác, vui lòng tải lại trang."));
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadRequestException(BadRequestException ex) {
+        log.warn("Bad Request Exception: {}", ex.getMessage());
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.error(ex.getMessage()));
     }
 
 }

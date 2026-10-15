@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.purchase.service.Implement;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.common.cache.CacheNames;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
@@ -18,6 +19,8 @@ import com.ERP_SYSTEM.purchase.repository.SupplierRepository;
 import com.ERP_SYSTEM.purchase.service.SupplierService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -69,6 +72,7 @@ public class SupplierServiceImpl implements SupplierService {
             action = AuditAction.UPDATE,
             module = SourceModule.PURCHASE
     )
+    @CacheEvict(value = CacheNames.SUPPLIERS, key = "#id")
     @Override
     @Transactional
     public SupplierResponse update(UUID id, UpdateSupplierRequest request) {
@@ -80,6 +84,7 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toResponse(supplier);
     }
 
+    @Cacheable(value = CacheNames.SUPPLIERS, key = "#id")
     @Override
     @Transactional(readOnly = true)
     public SupplierResponse getById(UUID id) {
@@ -88,6 +93,10 @@ public class SupplierServiceImpl implements SupplierService {
         return supplierMapper.toResponse(supplier);
     }
 
+    @Cacheable(
+            value = CacheNames.SUPPLIERS,
+            key = "'all:' + #pageable.pageNumber + ':' + #pageable.pageSize + ':' + #pageable.sort"
+    )
     @Override
     @Transactional(readOnly = true)
     public Page<SupplierResponse> getAll(Pageable pageable) {
@@ -112,6 +121,7 @@ public class SupplierServiceImpl implements SupplierService {
             action = AuditAction.DELETE,
             module = SourceModule.PURCHASE
     )
+    @CacheEvict(value = CacheNames.SUPPLIERS, key = "#id")
     @Override
     @Transactional
     public void delete(UUID id) {

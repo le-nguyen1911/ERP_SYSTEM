@@ -2,6 +2,7 @@ package com.ERP_SYSTEM.inventory.service.Implement;
 
 import com.ERP_SYSTEM.audit.annotation.Auditable;
 import com.ERP_SYSTEM.audit.entity.enums.AuditAction;
+import com.ERP_SYSTEM.common.cache.CacheNames;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.inventory.dto.request.CreateWarehouseRequest;
 import com.ERP_SYSTEM.inventory.dto.request.UpdateWarehouseRequest;
@@ -13,6 +14,8 @@ import com.ERP_SYSTEM.inventory.repository.WarehouseRepository;
 import com.ERP_SYSTEM.inventory.service.WarehouseService;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +38,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             module = SourceModule.INVENTORY,
             idExpression = "#result.id"
     )
+    @CacheEvict(value = CacheNames.WAREHOUSES, allEntries = true)
     @Override
     @Transactional
     public WarehouseResponse create(CreateWarehouseRequest request) {
@@ -58,6 +62,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             action = AuditAction.UPDATE,
             module = SourceModule.INVENTORY
     )
+    @CacheEvict(value = CacheNames.WAREHOUSES, allEntries = true)
     @Override
     @Transactional
     public WarehouseResponse update(UUID id, UpdateWarehouseRequest request) {
@@ -74,12 +79,14 @@ public class WarehouseServiceImpl implements WarehouseService {
         return stockMapper.toWarehouseResponse(warehouse);
     }
 
+    @Cacheable(value = CacheNames.WAREHOUSES, key = "#id")
     @Override
     @Transactional(readOnly = true)
     public WarehouseResponse getById(UUID id) {
         return stockMapper.toWarehouseResponse(findByWarehouseId(id));
     }
 
+    @Cacheable(value = CacheNames.WAREHOUSES, key = "'all'")
     @Override
     @Transactional(readOnly = true)
     public List<WarehouseResponse> getAll() {
@@ -89,6 +96,7 @@ public class WarehouseServiceImpl implements WarehouseService {
                 .collect(Collectors.toList());
     }
 
+    @Cacheable(value = CacheNames.WAREHOUSES, key = "'active'")
     @Override
     @Transactional(readOnly = true)
     public List<WarehouseResponse> getAllActive() {
@@ -104,6 +112,7 @@ public class WarehouseServiceImpl implements WarehouseService {
             action = AuditAction.DELETE,
             module = SourceModule.INVENTORY
     )
+    @CacheEvict(value = CacheNames.WAREHOUSES, allEntries = true)
     @Override
     @Transactional
     public void delete(UUID id) {
