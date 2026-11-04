@@ -29,7 +29,7 @@ public interface StockService {
     List<ProductStockResponse> getLowStockAlerts();
 
     Page<StockTransactionResponse> getTransactionHistory(
-            UUID productId, Pageable pageable);
+            UUID warehouseId, Pageable pageable);
 
     ProductStockResponse updateMinQuantity(
             UpdateMinQuantityRequest request);

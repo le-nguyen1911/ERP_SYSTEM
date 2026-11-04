@@ -194,8 +194,8 @@ public class StockServiceImpl implements StockService {
 
     @Transactional(readOnly = true)
     @Override
-    public Page<StockTransactionResponse> getTransactionHistory(UUID productId, Pageable pageable) {
-        return stockTransactionRepository.findByProductId(productId, pageable).map(stockMapper::toStockTransactionResponse);
+    public Page<StockTransactionResponse> getTransactionHistory(UUID arehouseId, Pageable pageable) {
+        return stockTransactionRepository.findByWarehouseId(arehouseId, pageable).map(stockMapper::toStockTransactionResponse);
     }
 
     @Auditable(
