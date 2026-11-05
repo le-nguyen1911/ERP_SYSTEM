@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(name = "app.cache.enabled", havingValue = "true", matchIfMissing = true)
 public class CacheErrorConfig implements CachingConfigurer {
 
-    @Bean // Thêm @Bean ở đây
+    @Bean
     @Override
     public CacheErrorHandler errorHandler() {
         return new CacheErrorHandler() {
