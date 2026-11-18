@@ -20,7 +20,16 @@ public interface RoleService {
 
     RoleResponse setPermissionsForRole(UUID id, Set<String> permissions);
 
+    /** Returns ALL roles – for SUPER_ADMIN. */
     List<RoleResponse> getAllRoles();
+
+    /**
+     * Returns roles filtered based on the caller's privilege:
+     * - SUPER_ADMIN sees all roles.
+     * - ADMIN and others do NOT see SUPER_ADMIN role.
+     */
+    List<RoleResponse> getAllRolesForCaller();
 
     RoleResponse getRoleById(UUID id);
 }
+

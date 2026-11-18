@@ -10,9 +10,15 @@ import org.springframework.data.domain.Pageable;
 import java.util.UUID;
 
 public interface UserService {
+    /** Returns ALL users – for SUPER_ADMIN. */
     Page<UserInfoResponse> getAllUsers(Pageable pageable);
-    // Trả về danh sách có phân trang
-    // Không trả hết 1000 user 1 lúc → nặng server
+
+    /**
+     * Returns users filtered based on the caller's privilege:
+     * - SUPER_ADMIN sees all users.
+     * - ADMIN and others do NOT see SUPER_ADMIN users.
+     */
+    Page<UserInfoResponse> getAllUsersForCaller(Pageable pageable);
 
     UserInfoResponse getUserById(UUID id);
 
@@ -21,17 +27,13 @@ public interface UserService {
     void deleteUser(UUID id);
 
     void lockUser(UUID id);
-    // enabled = false → không login được
 
     void unlockUser(UUID id);
-    // enabled = true → login được lại
 
     UserInfoResponse assignRoles(UUID id, AssignRoleRequest request);
-    // Gán role cho user
 
     UserInfoResponse removeRoles(UUID id, AssignRoleRequest request);
-    // Xóa role khỏi user
 
     void changePassword(String username, ChangePasswordRequest request);
-    // User tự đổi mật khẩu của mình
 }
+

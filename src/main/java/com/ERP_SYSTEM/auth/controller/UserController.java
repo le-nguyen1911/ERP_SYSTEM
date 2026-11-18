@@ -27,23 +27,32 @@ import java.util.UUID;
 public class UserController {
     private final UserService userService;
 
+    /**
+     * GET /api/v1/users
+     * Returns a page of users filtered by privilege:
+     * - SUPER_ADMIN: sees all users.
+     * - ADMIN: sees all users except those with SUPER_ADMIN role.
+     */
     @GetMapping
-    @PreAuthorize("hasAuthority('USER_VIEW')")
+    @PreAuthorize("hasAuthority('USER_VIEW') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Page<UserInfoResponse>>> getAllUsers(
             @PageableDefault(
                     size = 10,
                     sort = "createdAt",
                     direction = Sort.Direction.DESC
-
             ) Pageable pageable
     ) {
         return ResponseEntity.ok(
-                ApiResponse.success(userService.getAllUsers(pageable))
+                ApiResponse.success(userService.getAllUsersForCaller(pageable))
         );
     }
 
+    /**
+     * GET /api/v1/users/{id}
+     * ADMIN is blocked from reading a SUPER_ADMIN user by the service layer (403).
+     */
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_VIEW')")
+    @PreAuthorize("hasAuthority('USER_VIEW') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<UserInfoResponse>> getUserById(@PathVariable UUID id) {
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -53,7 +62,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_UPDATE')")
+    @PreAuthorize("hasAuthority('USER_UPDATE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<UserInfoResponse>> updateUserById(@PathVariable UUID id, @Valid @RequestBody UpdateUserRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -64,7 +73,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('USER_DELETE')")
+    @PreAuthorize("hasAuthority('USER_DELETE') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Object>> deleteUserById(@PathVariable UUID id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(
@@ -76,7 +85,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/lock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Object>> lockUser(@PathVariable UUID id) {
         userService.lockUser(id);
         return ResponseEntity.ok(
@@ -87,7 +96,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/unlock")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Object>> unlockUser(@PathVariable UUID id) {
         userService.unlockUser(id);
         return ResponseEntity.ok(
@@ -98,7 +107,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/roles")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<UserInfoResponse>> assignRoles(@PathVariable UUID id, @Valid @RequestBody AssignRoleRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -108,7 +117,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}/roles")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Object>> removeRoles(@PathVariable UUID id, @Valid @RequestBody AssignRoleRequest request) {
 
         return ResponseEntity.ok(

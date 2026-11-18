@@ -13,11 +13,13 @@ import com.ERP_SYSTEM.auth.mapper.UserMapper;
 import com.ERP_SYSTEM.auth.repository.RefreshTokenRepository;
 import com.ERP_SYSTEM.auth.repository.RoleRepository;
 import com.ERP_SYSTEM.auth.repository.UserRepository;
+import com.ERP_SYSTEM.auth.security.SuperAdminGuard;
 import com.ERP_SYSTEM.auth.service.UserService;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuditLogService auditLogService;
+    private final SuperAdminGuard superAdminGuard;
 
     @Override
     public Page<UserInfoResponse> getAllUsers(Pageable pageable) {
@@ -46,11 +49,24 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserInfoResponse getUserById(UUID id) {
-        User user = findUserById(id);
-        return userMapper.toUserInfoResponse(user);
+    public Page<UserInfoResponse> getAllUsersForCaller(Pageable pageable) {
+        if (superAdminGuard.callerIsSuperAdmin()) {
+            return getAllUsers(pageable);
+        }
+        // ADMIN and below: hide SUPER_ADMIN accounts
+        return userRepository.findAllExcludingSuperAdmin(pageable)
+                .map(userMapper::toUserInfoResponse);
     }
 
+    @Override
+    public UserInfoResponse getUserById(UUID id) {
+        User user = findUserById(id);
+        // Guard: ADMIN cannot view SUPER_ADMIN users
+        if (superAdminGuard.shouldHideUser(user)) {
+            throw new AccessDeniedException("Bạn không có quyền xem thông tin tài khoản này.");
+        }
+        return userMapper.toUserInfoResponse(user);
+    }
 
     @Auditable(entityClass = User.class, entityType = "User",
             action = AuditAction.UPDATE, module = SourceModule.AUTH)
@@ -58,6 +74,9 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserInfoResponse updateUser(UUID id, UpdateUserRequest request) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot modify SUPER_ADMIN users
+        superAdminGuard.assertCanMutateUser(user);
+
         if (request.getEmail() != null
                 && !request.getEmail().equals(user.getEmail())
                 && userRepository.existsByEmail(request.getEmail())) {
@@ -75,6 +94,18 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(UUID id) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot delete SUPER_ADMIN users
+        superAdminGuard.assertCanMutateUser(user);
+
+        // Guard: cannot delete the last SUPER_ADMIN
+        boolean userIsSuperAdmin = user.getRoles().stream()
+                .map(Role::getName)
+                .anyMatch(SuperAdminGuard.SUPER_ADMIN_ROLE::equalsIgnoreCase);
+        if (userIsSuperAdmin) {
+            long count = userRepository.countSuperAdminUsers();
+            superAdminGuard.assertLastSuperAdminProtection(count);
+        }
+
         userRepository.delete(user);
     }
 
@@ -84,6 +115,8 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void lockUser(UUID id) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot lock SUPER_ADMIN users
+        superAdminGuard.assertCanMutateUser(user);
         user.setEnabled(false);
         userRepository.save(user);
     }
@@ -94,10 +127,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void unlockUser(UUID id) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot unlock SUPER_ADMIN users
+        superAdminGuard.assertCanMutateUser(user);
         user.setEnabled(true);
         userRepository.save(user);
     }
-
 
     @Auditable(entityClass = User.class, entityType = "User",
             action = AuditAction.UPDATE, module = SourceModule.AUTH)
@@ -105,6 +139,12 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserInfoResponse assignRoles(UUID id, AssignRoleRequest request) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot assign roles to SUPER_ADMIN users (and cannot assign SUPER_ADMIN role)
+        superAdminGuard.assertCanMutateUser(user);
+        for (String roleName : request.getRoles()) {
+            superAdminGuard.assertCanAssignRole(roleName);
+        }
+
         Set<Role> rolesToAdd = request.getRoles().stream().map(rolename -> roleRepository
                         .findByName(rolename)
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy role" + rolename)))
@@ -121,11 +161,26 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserInfoResponse removeRoles(UUID id, AssignRoleRequest request) {
         User user = findUserById(id);
+        // Guard: ADMIN cannot remove roles from SUPER_ADMIN users
+        superAdminGuard.assertCanMutateUser(user);
+
+        // Guard: cannot remove SUPER_ADMIN role if this is the last SUPER_ADMIN user
+        boolean removingSuperAdmin = request.getRoles().stream()
+                .anyMatch(SuperAdminGuard.SUPER_ADMIN_ROLE::equalsIgnoreCase);
+        if (removingSuperAdmin) {
+            boolean userIsSuperAdmin = user.getRoles().stream()
+                    .map(Role::getName)
+                    .anyMatch(SuperAdminGuard.SUPER_ADMIN_ROLE::equalsIgnoreCase);
+            if (userIsSuperAdmin) {
+                long count = userRepository.countSuperAdminUsers();
+                superAdminGuard.assertLastSuperAdminProtection(count);
+            }
+        }
+
         user.getRoles().removeIf(role -> request.getRoles().contains(role.getName()));
         userRepository.save(user);
         return userMapper.toUserInfoResponse(user);
     }
-
 
     @Override
     @Transactional

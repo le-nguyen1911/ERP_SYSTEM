@@ -9,11 +9,13 @@ import com.ERP_SYSTEM.auth.entity.Role;
 import com.ERP_SYSTEM.auth.mapper.RoleMapper;
 import com.ERP_SYSTEM.auth.repository.PermissionRepository;
 import com.ERP_SYSTEM.auth.repository.RoleRepository;
+import com.ERP_SYSTEM.auth.security.SuperAdminGuard;
 import com.ERP_SYSTEM.auth.service.RoleService;
 import com.ERP_SYSTEM.common.exception.DuplicateResourceException;
 import com.ERP_SYSTEM.common.exception.ResourceNotFoundException;
 import com.ERP_SYSTEM.notification.entity.Enum.SourceModule;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class RoleServiceImpl implements RoleService {
     private final RoleRepository roleRepository;
     private final PermissionRepository permissionRepository;
     private final RoleMapper roleMapper;
+    private final SuperAdminGuard superAdminGuard;
 
     @Auditable(
             entityClass = Role.class,
@@ -41,6 +44,12 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse createRole(CreateRoleRequest request) {
         String roleName = request.getName().trim();
+
+        // Block anyone except SUPER_ADMIN from creating a role named SUPER_ADMIN
+        if (SuperAdminGuard.SUPER_ADMIN_ROLE.equalsIgnoreCase(roleName) && !superAdminGuard.callerIsSuperAdmin()) {
+            throw new AccessDeniedException("Không được phép tạo vai trò SUPER_ADMIN.");
+        }
+
         if (roleRepository.findByName(roleName).isPresent()) {
             throw new DuplicateResourceException("Vai trò " + roleName + " đã tồn tại trong hệ thống");
         }
@@ -70,7 +79,13 @@ public class RoleServiceImpl implements RoleService {
         Role role = findRoleById(id);
         String newName = request.getName().trim();
 
+        // Guard: cannot mutate SUPER_ADMIN role unless caller is SUPER_ADMIN
+        superAdminGuard.assertCanMutateRole(role.getName());
+
         if (!role.getName().equalsIgnoreCase(newName)) {
+            // Guard: cannot rename anything to/from SUPER_ADMIN without privilege
+            superAdminGuard.assertCanRenameRole(role.getName(), newName);
+
             if (roleRepository.findByName(newName).isPresent()) {
                 throw new DuplicateResourceException("Vai trò " + newName + " đã tồn tại trong hệ thống");
             }
@@ -102,6 +117,9 @@ public class RoleServiceImpl implements RoleService {
     public void deleteRole(UUID id) {
         Role role = findRoleById(id);
 
+        // Guard: SUPER_ADMIN role can never be deleted
+        superAdminGuard.assertCanDeleteRole(role.getName());
+
         if ("ADMIN".equalsIgnoreCase(role.getName())) {
             throw new RuntimeException("Không thể xóa vai trò quản trị hệ thống ADMIN");
         }
@@ -124,6 +142,8 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse addPermissionsToRole(UUID id, Set<String> permissions) {
         Role role = findRoleById(id);
+        // Guard: only SUPER_ADMIN can modify SUPER_ADMIN role permissions
+        superAdminGuard.assertCanMutateRole(role.getName());
         if (permissions != null && !permissions.isEmpty()) {
             Set<Permission> newPermissions = permissionRepository.findByNameIn(permissions);
             role.getPermissions().addAll(newPermissions);
@@ -142,6 +162,8 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse removePermissionsFromRole(UUID id, Set<String> permissions) {
         Role role = findRoleById(id);
+        // Guard: only SUPER_ADMIN can modify SUPER_ADMIN role permissions
+        superAdminGuard.assertCanMutateRole(role.getName());
         if (permissions != null && !permissions.isEmpty()) {
             role.getPermissions().removeIf(p -> permissions.contains(p.getName()));
             roleRepository.save(role);
@@ -159,6 +181,8 @@ public class RoleServiceImpl implements RoleService {
     @Transactional
     public RoleResponse setPermissionsForRole(UUID id, Set<String> permissions) {
         Role role = findRoleById(id);
+        // Guard: only SUPER_ADMIN can modify SUPER_ADMIN role permissions
+        superAdminGuard.assertCanMutateRole(role.getName());
         Set<Permission> newPermissions = new HashSet<>();
         if (permissions != null && !permissions.isEmpty()) {
             newPermissions = permissionRepository.findByNameIn(permissions);
@@ -179,8 +203,26 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RoleResponse> getAllRolesForCaller() {
+        if (superAdminGuard.callerIsSuperAdmin()) {
+            return getAllRoles();
+        }
+        // ADMIN and others: hide SUPER_ADMIN role
+        return roleRepository.findAllExcludingSuperAdmin()
+                .stream()
+                .map(roleMapper::toRoleResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public RoleResponse getRoleById(UUID id) {
-        return roleMapper.toRoleResponse(findRoleById(id));
+        Role role = findRoleById(id);
+        // Guard: ADMIN cannot read SUPER_ADMIN role details
+        if (superAdminGuard.shouldHideRole(role.getName())) {
+            throw new AccessDeniedException("Bạn không có quyền xem thông tin vai trò này.");
+        }
+        return roleMapper.toRoleResponse(role);
     }
 
     private Role findRoleById(UUID id) {
@@ -189,3 +231,4 @@ public class RoleServiceImpl implements RoleService {
         );
     }
 }
+

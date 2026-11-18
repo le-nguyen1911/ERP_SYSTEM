@@ -69,6 +69,11 @@ public class DataInitializer implements CommandLineRunner {
         ), existingPermissionMap);
 
         initRole("ADMIN", permissionDefinitions.keySet(), existingPermissionMap);
+
+        // SUPER_ADMIN: has all permissions that ADMIN has + future-proofed
+        // SUPER_ADMIN's true power comes from hasRole('SUPER_ADMIN') checks in controllers/services,
+        // not only from the permission set. We still seed all permissions so SUPER_ADMIN shows complete access.
+        initRole("SUPER_ADMIN", permissionDefinitions.keySet(), existingPermissionMap);
     }
 
     private void initRole(String roleName, Set<String> permissionNames, Map<String, Permission> permissionMap) {

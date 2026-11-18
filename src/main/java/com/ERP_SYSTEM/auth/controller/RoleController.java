@@ -22,7 +22,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> createRole(@Valid @RequestBody CreateRoleRequest request) {
         RoleResponse created = roleService.createRole(request);
         return new ResponseEntity<>(
@@ -31,16 +31,26 @@ public class RoleController {
         );
     }
 
+    /**
+     * GET /api/v1/roles
+     * Returns roles filtered by the caller's privilege:
+     * - SUPER_ADMIN sees all roles including SUPER_ADMIN itself.
+     * - ADMIN sees all roles except SUPER_ADMIN.
+     */
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<List<RoleResponse>>> getAllRoles() {
         return ResponseEntity.ok(
-                ApiResponse.success(roleService.getAllRoles())
+                ApiResponse.success(roleService.getAllRolesForCaller())
         );
     }
 
+    /**
+     * GET /api/v1/roles/{id}
+     * ADMIN is blocked from reading a SUPER_ADMIN role by the service layer (403).
+     */
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> getRoleById(@PathVariable UUID id) {
         return ResponseEntity.ok(
                 ApiResponse.success(roleService.getRoleById(id))
@@ -48,7 +58,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> updateRole(
             @PathVariable UUID id,
             @Valid @RequestBody CreateRoleRequest request) {
@@ -58,7 +68,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteRole(@PathVariable UUID id) {
         roleService.deleteRole(id);
         return ResponseEntity.ok(
@@ -67,7 +77,7 @@ public class RoleController {
     }
 
     @PostMapping("/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> addPermissions(
             @PathVariable UUID id,
             @RequestBody Set<String> permissions) {
@@ -80,7 +90,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> removePermissions(
             @PathVariable UUID id,
             @RequestBody Set<String> permissions) {
@@ -93,7 +103,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}/permissions")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<RoleResponse>> setPermissions(
             @PathVariable UUID id,
             @RequestBody Set<String> permissions) {
@@ -105,3 +115,4 @@ public class RoleController {
         );
     }
 }
+
