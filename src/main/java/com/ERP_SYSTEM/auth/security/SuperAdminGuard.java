@@ -33,7 +33,7 @@ public class SuperAdminGuard {
 
     /** Returns true if the currently authenticated user has ADMIN role (but NOT SUPER_ADMIN). */
     public boolean callerIsAdmin() {
-        return hasAuthority(ROLE_ADMIN);
+        return hasAuthority(ROLE_ADMIN) && !callerIsSuperAdmin();
     }
 
     private boolean hasAuthority(String authority) {

@@ -29,7 +29,7 @@ public class NotificationController {
 
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<NotificationResponse>> create(
             @Valid @RequestBody CreateNotificationRequest request) {
         NotificationResponse response = notificationService.create(request);
